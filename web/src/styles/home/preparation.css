@@ -1,0 +1,88 @@
+.preparation-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+.preparation-summary > span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.preparation-checklist progress {
+  display: block;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border: 0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 12px 0 22px;
+  background: var(--line);
+}
+.preparation-checklist progress::-webkit-progress-bar {
+  background: var(--line);
+}
+.preparation-checklist progress::-webkit-progress-value {
+  background: var(--color-primary-400);
+}
+.preparation-checklist progress::-moz-progress-bar {
+  background: var(--color-primary-400);
+}
+.preparation-group {
+  border-bottom: 1px solid var(--line);
+}
+.preparation-group summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+}
+.preparation-group summary::-webkit-details-marker {
+  display: none;
+}
+.preparation-group summary > span {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+.preparation-group[open] summary > svg {
+  transform: rotate(180deg);
+}
+.preparation-item {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 11px 0;
+  min-height: 44px;
+}
+.preparation-item .checkbox {
+  flex: 0 0 21px;
+  width: 21px;
+  height: 21px;
+  border-radius: 6px;
+}
+.preparation-item strong {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 21px;
+}
+.preparation-item small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.7;
+  margin-top: 3px;
+}
+.preparation-item[aria-checked="true"] strong {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.preparation-group:last-of-type {
+  margin-bottom: 18px;
+}

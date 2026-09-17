@@ -1,0 +1,230 @@
+/* Timeline and details */
+.route-summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 13px 16px;
+  border: 1px solid #fff;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius-md);
+  color: var(--color-primary-600);
+}
+.route-summary strong {
+  color: var(--accent);
+  font-weight: 500;
+}
+.day-picker {
+  display: flex;
+  gap: 9px;
+  margin: 25px -24px 0;
+  padding: 2px 24px 12px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.day-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 70px;
+  padding: 14px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid #fff;
+  box-shadow: var(--shadow);
+  background: var(--surface);
+}
+.day-chip small {
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--color-primary-500);
+}
+.day-chip strong {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 500;
+}
+.day-chip span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.day-chip.selected {
+  background: #e1d4f0;
+  border-color: #e1d4f0;
+  color: #3f2d56;
+}
+.day-chip.selected span,
+.day-chip.selected small {
+  color: #806c96;
+}
+.timeline {
+  margin: 18px 0 24px;
+}
+.timeline-event {
+  position: relative;
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  text-align: left;
+  padding: 0 0 24px;
+}
+.timeline-event:before {
+  content: "";
+  position: absolute;
+  left: 71px;
+  top: 30px;
+  bottom: 0;
+  border-left: 1px dashed #d6c9e0;
+}
+.timeline-event:last-child:before {
+  display: none;
+}
+.timeline-time {
+  width: 43px;
+  flex-shrink: 0;
+  padding-top: 7px;
+}
+.timeline-time strong {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 500;
+  display: block;
+}
+.timeline-time span {
+  font-size: 9px;
+  color: var(--color-primary-500);
+}
+.timeline-icon {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--color-primary-600);
+}
+.timeline-icon.flight {
+  background: transparent;
+}
+.timeline-card {
+  background: var(--surface);
+  padding: 15px 16px;
+  border: 1px solid #fff;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius-md);
+  flex: 1;
+  min-width: 0;
+}
+.timeline-card > small {
+  font-size: 9px;
+  color: var(--color-primary-500);
+}
+.timeline-card h3 {
+  font-size: 15px;
+  margin: 6px 0;
+}
+.timeline-card p {
+  font-size: 11px;
+  color: var(--muted);
+}
+.timeline-link {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--accent);
+  margin-top: 13px;
+}
+.event-detail,
+.expense-detail {
+  padding: 0 22px 25px;
+}
+.detail-kind {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  background: var(--color-primary-100);
+  border-radius: var(--radius-md);
+  padding: 13px;
+  font-size: 12px;
+  color: var(--color-primary-700);
+  margin-bottom: 16px;
+}
+.detail-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 0;
+  font-size: 13px;
+}
+.detail-row > svg {
+  margin-top: 3px;
+  color: var(--color-primary-500);
+}
+.detail-row small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.detail-note {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+.detail-note > svg {
+  margin-top: 2px;
+}
+.detail-note p {
+  font-size: 12px;
+  line-height: 1.9;
+}
+.flight-route {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+  padding: 15px 10px;
+  border-bottom: 1px dashed var(--line);
+}
+.flight-route > div:not(.flight-line) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.flight-route strong {
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--accent);
+}
+.flight-route span {
+  font-size: 13px;
+}
+.flight-line {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  color: var(--color-primary-500);
+}
+
+.timeline-icon .travel-sticker {
+  width: 43px;
+  max-height: 45px;
+  margin-top: 0;
+}
+.route-summary {
+  background: #eeebf2;
+  border: 0;
+  box-shadow: none;
+}

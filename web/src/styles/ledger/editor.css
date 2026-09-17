@@ -1,0 +1,138 @@
+.member-statistics {
+  margin-top: 18px;
+  margin-bottom: 20px;
+}
+.pending-confirm {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  min-height: 44px;
+}
+.pending-confirm > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.expense-sheet .sheet-header {
+  padding: 12px 18px 16px;
+}
+.expense-sheet .sheet-header h2 {
+  font-size: 19px;
+}
+.expense-sheet .expense-form {
+  padding: 0 18px max(18px, env(safe-area-inset-bottom));
+}
+.expense-sheet .expense-form label {
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+.expense-sheet .expense-form input,
+.expense-sheet .expense-form select,
+.expense-sheet .expense-form textarea {
+  min-height: 42px;
+  padding: 8px 10px;
+  margin-top: 5px;
+}
+.expense-sheet .amount-entry {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 0 0 10px;
+}
+.expense-sheet .amount-entry label {
+  flex: 1;
+  margin: 0;
+  color: var(--muted);
+}
+.expense-sheet .amount-entry input {
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -1.5px;
+}
+.expense-sheet .amount-entry input:focus {
+  outline: none;
+  box-shadow: none;
+  caret-color: var(--accent);
+}
+.expense-sheet .amount-entry label:focus-within {
+  color: var(--accent);
+}
+.expense-currency {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  margin-top: 14px;
+  border-radius: 50%;
+  background: var(--color-primary-100);
+  color: var(--accent);
+}
+.expense-currency:hover {
+  background: var(--color-primary-200);
+}
+.expense-currency:active {
+  transform: scale(0.95);
+}
+.currency-switch-icon {
+  position: absolute;
+  bottom: 4px;
+  right: 3px;
+  box-sizing: content-box;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--paper);
+}
+.expense-sheet .participant {
+  flex-direction: row;
+  gap: 5px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  font-size: 10px;
+}
+.expense-sheet .participant .avatar {
+  width: 22px;
+  height: 22px;
+}
+.expense-sheet .participant > svg {
+  display: none;
+}
+.expense-sheet .primary-button {
+  min-height: 46px;
+  padding: 12px;
+}
+.receipt-picker input[hidden] {
+  display: none;
+}
+.receipt-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 10px;
+  font-size: 11px;
+}
+.receipt-caption small {
+  font-size: 9px;
+  color: var(--muted);
+}
+.receipt-add {
+  align-self: start;
+  border-style: dashed;
+  background: transparent;
+}
+.receipt-add:hover {
+  background: var(--color-primary-100);
+}
+.receipt-picker {
+  margin-bottom: 16px;
+}

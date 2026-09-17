@@ -1,0 +1,177 @@
+.local-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  margin-left: auto;
+  min-width: 0;
+}
+.clock-location {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  padding: 2px 0;
+  min-height: 18px;
+  max-width: 152px;
+  font-size: 9px;
+  color: #81718f;
+}
+.clock-location span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.clock-switch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+  min-height: 22px;
+  white-space: nowrap;
+  color: #655475;
+}
+.clock-switch > span {
+  font-size: 9px;
+}
+.clock-switch time {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+}
+.ticket-content-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+}
+.ticket-stub {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+.feature-top {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.feature-main.has-route {
+  display: block;
+  padding-bottom: 0;
+}
+.feature-main.has-route h1 {
+  font-size: 16px;
+  letter-spacing: 0;
+  font-weight: 650;
+}
+.feature-main.has-route p {
+  font-size: 10px;
+  margin-top: 4px;
+}
+.ticket-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 24px 22px 22px;
+}
+.route-endpoint {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.route-endpoint:last-child {
+  align-items: flex-end;
+  text-align: right;
+}
+.route-endpoint > small {
+  font-size: 9px;
+  color: #897a97;
+}
+.route-endpoint > strong {
+  font-size: 27px;
+  line-height: 1.4;
+  letter-spacing: -0.8px;
+  margin: 7px 0 3px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.route-endpoint > span {
+  min-height: 18px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.route-endpoint time {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  margin: 17px 0 5px;
+}
+.ticket-route-direction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding-top: 24px;
+  color: #b19bc8;
+}
+.ticket-route-direction .travel-sticker {
+  width: 58px;
+}
+.route-footer {
+  padding-top: 12px;
+  padding-bottom: 6px;
+  font-size: 10px;
+}
+@media (max-width: 360px) {
+  .ticket-route {
+    padding: 20px 18px;
+    gap: 5px;
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  }
+  .route-endpoint > strong {
+    font-size: 24px;
+  }
+  .ticket-route-direction .travel-sticker {
+    width: 44px;
+  }
+  .route-endpoint time {
+    font-size: 28px;
+  }
+}
+
+/* Keep the live clock and ticket countdown readable on shorter phone screens. */
+@media (max-height: 740px) {
+  .feature-top {
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+  .feature-main.has-route {
+    padding-top: 16px;
+  }
+  .ticket-route {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+  .route-endpoint time {
+    margin-top: 9px;
+  }
+  .route-footer {
+    padding-top: 8px;
+    padding-bottom: 3px;
+  }
+  .ticket-bottom-row {
+    margin-top: 14px;
+  }
+}
+@media (max-height: 740px) {
+  .feature-main.has-route p {
+    display: none;
+  }
+  .ticket-route {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}

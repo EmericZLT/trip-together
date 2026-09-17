@@ -1,0 +1,159 @@
+.profile-trip-controls {
+  margin: 24px 0;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #ebe4f4;
+}
+.profile-trip-controls > button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  text-align: left;
+  width: 100%;
+  padding: 18px 20px;
+}
+.profile-trip-controls > button > span {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.profile-trip-controls strong {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.profile-trip-controls small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.profile-current-trip + .profile-trip-manage {
+  border-top: 1px solid #d9cce7;
+}
+.profile-trip-manage {
+  background: #ffffff6b;
+}
+.page-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.page-heading-row h1 {
+  flex: 1;
+  min-width: 0;
+}
+.page-heading-row .page-add-button {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: #e9e0f2;
+  color: #6c4c96;
+}
+.trip-management .trip-manager-heading h1 {
+  overflow-wrap: anywhere;
+}
+.trip-detail-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 22px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.trip-detail-status > span:last-child {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent);
+}
+.trip-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 20px;
+  background: #fff;
+  border-radius: 22px;
+  text-align: left;
+}
+.trip-setting-row > span {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+}
+.trip-setting-row small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.trip-invitation {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 22px;
+  background: #f0ebf5;
+  border-radius: 24px;
+}
+.trip-invitation .section-heading {
+  margin: 0;
+}
+.trip-invitation h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 17px;
+}
+.trip-invitation p,
+.trip-member-note p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.trip-invitation small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.invite-code-label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.trip-danger-zone {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 28px 4px 4px;
+}
+.trip-danger-zone button {
+  color: var(--color-error);
+}
+.trip-danger-zone small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.trip-member-note {
+  display: flex;
+  gap: 12px;
+  padding: 22px;
+  background: #fff;
+  border-radius: 22px;
+}
+.trip-member-note > svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.invite-code-label .short-invite-code {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff;
+  font-size: 30px;
+  letter-spacing: 0.2em;
+  font-weight: 750;
+  text-align: center;
+}

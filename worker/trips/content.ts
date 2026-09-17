@@ -1,0 +1,138 @@
+import { z } from "zod";
+import { body, HttpError, json } from "../http";
+import { currencySchema, eventSchema } from "../../shared/validation";
+import { requireDocument } from "./access";
+const versionSchema = z.object({ version: z.number().int().positive() });
+export async function saveEvent(
+  request: Request,
+  env: Env,
+  tripId: string,
+  memberId: string,
+  id?: string,
+) {
+  const v = await body(request, eventSchema);
+  const eventId = id ?? crypto.randomUUID();
+  for (const doc of v.documents)
+    await requireDocument(env, doc, tripId, memberId);
+  const { version, ...data } = v;
+  // Preserve attachments owned by other members when editing a shared event.
+  if (id) {
+    const previous = await env.DB.prepare(
+      "SELECT data FROM events WHERE id=? AND trip_id=?",
+    )
+      .bind(id, tripId)
+      .first<{ data: string }>();
+    if (previous) {
+      const hidden = await env.DB.prepare(
+        "SELECT id FROM documents WHERE trip_id=? AND owner_id IS NOT NULL AND owner_id<>? AND id IN (SELECT value FROM json_each(?, '$.documents'))",
+      )
+        .bind(tripId, memberId, previous.data)
+        .all<{ id: string }>();
+      data.documents = [
+        ...new Set([...data.documents, ...hidden.results.map((d) => d.id)]),
+      ];
+    }
+  }
+  const r = id
+    ? await env.DB.prepare(
+        "UPDATE events SET data=?,version=version+1 WHERE id=? AND trip_id=? AND version=?",
+      )
+        .bind(
+          JSON.stringify({ ...data, id: eventId }),
+          eventId,
+          tripId,
+          version ?? 0,
+        )
+        .run()
+    : await env.DB.prepare(
+        "INSERT INTO events (id,trip_id,data) VALUES (?,?,?)",
+      )
+        .bind(eventId, tripId, JSON.stringify({ ...data, id: eventId }))
+        .run();
+  if (!r.meta.changes) throw new HttpError(409, "事项已经变更，请刷新后重试");
+  return json({ id: eventId });
+}
+export async function deleteEvent(
+  request: Request,
+  env: Env,
+  tripId: string,
+  id: string,
+) {
+  const { version } = await body(request, versionSchema);
+  const r = await env.DB.prepare(
+    "DELETE FROM events WHERE id=? AND trip_id=? AND version=?",
+  )
+    .bind(id, tripId, version)
+    .run();
+  if (!r.meta.changes) throw new HttpError(409, "事项已经变更，请刷新后重试");
+  return json({ ok: true });
+}
+export async function preparation(
+  request: Request,
+  env: Env,
+  tripId: string,
+  id?: string,
+) {
+  if (request.method === "DELETE") {
+    await env.DB.prepare(
+      "DELETE FROM preparation_items WHERE trip_id=? AND id=?",
+    )
+      .bind(tripId, id)
+      .run();
+    return json({ ok: true });
+  }
+  const v = await body(
+    request,
+    z.object({
+      group_name: z.string().trim().min(1).max(60),
+      title: z.string().trim().min(1).max(200),
+      note: z.string().max(1000).default(""),
+    }),
+  );
+  const itemId = crypto.randomUUID();
+  await env.DB.prepare(
+    "INSERT INTO preparation_items (id,trip_id,group_name,title,note) VALUES (?,?,?,?,?)",
+  )
+    .bind(itemId, tripId, v.group_name, v.title, v.note)
+    .run();
+  return json({ id: itemId });
+}
+export async function pendingCost(
+  request: Request,
+  env: Env,
+  tripId: string,
+  memberId: string,
+  id?: string,
+) {
+  if (request.method === "DELETE") {
+    const used = await env.DB.prepare(
+      "SELECT id FROM expenses WHERE trip_id=? AND pending_id=?",
+    )
+      .bind(tripId, id)
+      .first();
+    if (used) throw new HttpError(409, "请先删除关联支出，再删除预订");
+    await env.DB.prepare("DELETE FROM pending_costs WHERE trip_id=? AND id=?")
+      .bind(tripId, id)
+      .run();
+    return json({ ok: true });
+  }
+  const v = await body(
+    request,
+    z.object({
+      title: z.string().trim().min(1).max(150),
+      amount: z.number().int().min(0).max(100000000),
+      currency: currencySchema,
+      note: z.string().max(1000).default(""),
+      document_id: z.string().uuid().nullable().default(null),
+    }),
+  );
+  if (v.document_id)
+    await requireDocument(env, v.document_id, tripId, memberId, true);
+  const costId = crypto.randomUUID();
+  await env.DB.prepare(
+    "INSERT INTO pending_costs (id,trip_id,title,amount,currency,note,document_id) VALUES (?,?,?,?,?,?,?)",
+  )
+    .bind(costId, tripId, v.title, v.amount, v.currency, v.note, v.document_id)
+    .run();
+  return json({ id: costId });
+}

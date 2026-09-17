@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@import "../styles/base.css";
+@import "../styles/today.css";
+@import "../styles/home/location-route.css";
+@import "../styles/login.css";
+@import "../styles/documents.css";
+@import "../styles/itinerary.css";
+@import "../styles/ledger.css";
+@import "../styles/profile.css";
+@import "../styles/overlays.css";
+@import "../styles/home/preparation.css";
+@import "../styles/ledger/editor.css";
+@import "../styles/ledger/detail.css";
+@import "../styles/components/interaction.css";
+
+@import "../styles/components/editor.css";
+
+@import "../styles/components/travel-hub.css";
+
+@import "../styles/components/trip-management.css";
+
+@theme {
+  --color-primary-50: #f6f5f3;
+  --color-primary-100: #efedf2;
+  --color-primary-200: #e5e1e9;
+  --color-primary-300: #d1cadc;
+  --color-primary-400: #b6aac9;
+  --color-primary-500: #9685b0;
+  --color-primary-600: #786391;
+  --color-primary-700: #604b79;
+  --color-primary-800: #393044;
+  --color-primary-900: #292531;
+  --color-primary-950: #1c1922;
+  --color-secondary-50: #f7f7f8;
+  --color-secondary-100: #eeeff1;
+  --color-secondary-200: #d8dade;
+  --color-secondary-300: #bcc0c7;
+  --color-secondary-400: #959ba7;
+  --color-secondary-500: #6b7280;
+  --color-secondary-600: #626875;
+  --color-secondary-700: #4f545e;
+  --color-secondary-800: #3c4048;
+  --color-secondary-900: #2f3237;
+  --color-secondary-950: #1f2024;
+  --color-accent-50: #f8f5ff;
+  --color-accent-100: #f0eafb;
+  --color-accent-200: #e4d9f5;
+  --color-accent-300: #d1bfed;
+  --color-accent-400: #b79ddb;
+  --color-accent-500: #977ac4;
+  --color-accent-600: #8061ad;
+  --color-accent-700: #6c4c96;
+  --color-accent-800: #583d7b;
+  --color-accent-900: #463260;
+  --color-accent-950: #2c203c;
+  --color-neutral-50: #f6f5f3;
+  --color-neutral-100: #efedf2;
+  --color-neutral-200: #e5e1e9;
+  --color-neutral-300: #d1cadc;
+  --color-neutral-400: #b6aac9;
+  --color-neutral-500: #9685b0;
+  --color-neutral-600: #786391;
+  --color-neutral-700: #604b79;
+  --color-neutral-800: #393044;
+  --color-neutral-900: #292531;
+  --color-neutral-950: #1c1922;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #bb433a;
+  --font-sans:
+    ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont,
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --radius-md: 1.25rem;
+  --radius-lg: 1.875rem;
+  --radius-xl: 2rem;
+}
