@@ -103,26 +103,7 @@ test("不能跨行程关联文件、预订、清单或他人私有文件", async
     { itemId: item.id, checked: true },
     400,
   );
-  const pending = await a.request(p + "/pending-costs", "POST", {
-    title: "待核对",
-    amount: 100,
-    currency: "USD",
-  });
-  await a.request(
-    q + "/expenses",
-    "POST",
-    {
-      title: "测试",
-      amount: 100,
-      currency: "USD",
-      payerId: a.id,
-      participants: [a.id],
-      date: "2030-06-01",
-      note: "",
-      pendingId: pending.id,
-    },
-    404,
-  );
+  await a.request(p + "/pending-costs", "POST", {}, 404);
   await a.request(p, "DELETE", { title: tripInput.title });
   await a.request(q, "DELETE", { title: tripInput.title });
 });

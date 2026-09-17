@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { body, HttpError, json } from "../http";
-import { currencySchema, eventSchema } from "../../shared/validation";
+import { eventSchema } from "../../shared/validation";
 import { requireDocument } from "./access";
 const versionSchema = z.object({ version: z.number().int().positive() });
 export async function saveEvent(
@@ -96,43 +96,4 @@ export async function preparation(
     .bind(itemId, tripId, v.group_name, v.title, v.note)
     .run();
   return json({ id: itemId });
-}
-export async function pendingCost(
-  request: Request,
-  env: Env,
-  tripId: string,
-  memberId: string,
-  id?: string,
-) {
-  if (request.method === "DELETE") {
-    const used = await env.DB.prepare(
-      "SELECT id FROM expenses WHERE trip_id=? AND pending_id=?",
-    )
-      .bind(tripId, id)
-      .first();
-    if (used) throw new HttpError(409, "请先删除关联支出，再删除预订");
-    await env.DB.prepare("DELETE FROM pending_costs WHERE trip_id=? AND id=?")
-      .bind(tripId, id)
-      .run();
-    return json({ ok: true });
-  }
-  const v = await body(
-    request,
-    z.object({
-      title: z.string().trim().min(1).max(150),
-      amount: z.number().int().min(0).max(100000000),
-      currency: currencySchema,
-      note: z.string().max(1000).default(""),
-      document_id: z.string().uuid().nullable().default(null),
-    }),
-  );
-  if (v.document_id)
-    await requireDocument(env, v.document_id, tripId, memberId, true);
-  const costId = crypto.randomUUID();
-  await env.DB.prepare(
-    "INSERT INTO pending_costs (id,trip_id,title,amount,currency,note,document_id) VALUES (?,?,?,?,?,?,?)",
-  )
-    .bind(costId, tripId, v.title, v.amount, v.currency, v.note, v.document_id)
-    .run();
-  return json({ id: costId });
 }

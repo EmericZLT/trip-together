@@ -204,27 +204,6 @@
   color: var(--muted);
   margin-top: 18px;
 }
-.pending-row {
-  padding: 17px;
-}
-.pending-row > div {
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
-}
-.pending-row strong {
-  font-size: 12px;
-  font-weight: 500;
-}
-.pending-row > div span {
-  font-size: 12px;
-  white-space: nowrap;
-}
-.pending-row p {
-  color: var(--muted);
-  font-size: 11px;
-  margin: 8px 0;
-}
 .detail-amount {
   font-family: var(--font-serif);
   font-size: 40px;

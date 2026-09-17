@@ -9,7 +9,6 @@ export async function tripData(env: Env, memberId: string, trip: Trip) {
     events,
     documents,
     expenses,
-    pending,
     packing,
     receipts,
     preparation,
@@ -29,15 +28,10 @@ export async function tripData(env: Env, memberId: string, trip: Trip) {
       .bind(trip.id, memberId, memberId)
       .all(),
     env.DB.prepare(
-      "SELECT e.*,p.document_id AS source_document_id FROM expenses e LEFT JOIN pending_costs p ON p.id=e.pending_id WHERE e.trip_id=? ORDER BY e.date DESC,e.created_at DESC,e.id DESC",
+      "SELECT e.* FROM expenses e WHERE e.trip_id=? ORDER BY e.date DESC,e.created_at DESC,e.id DESC",
     )
       .bind(trip.id)
       .all<{ participants: string }>(),
-    env.DB.prepare(
-      "SELECT * FROM pending_costs WHERE trip_id=? AND id NOT IN (SELECT pending_id FROM expenses WHERE pending_id IS NOT NULL) ORDER BY rowid",
-    )
-      .bind(trip.id)
-      .all(),
     env.DB.prepare(
       "SELECT item_id FROM packing WHERE trip_id=? AND member_id=? AND checked=1",
     )
@@ -76,7 +70,6 @@ export async function tripData(env: Env, memberId: string, trip: Trip) {
       ...e,
       participants: JSON.parse(e.participants),
     })),
-    pendingCosts: pending.results,
     packing: packing.results.map((p) => p.item_id),
     receipts: receipts.results,
     preparation: preparation.results,

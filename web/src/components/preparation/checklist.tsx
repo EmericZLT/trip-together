@@ -42,17 +42,21 @@ export function PreparationChecklist({
   }
   return (
     <div className="preparation-checklist">
-      <div className="preparation-summary">
-        <strong>
-          已完成 {completed} / {items.length}
-        </strong>
-        <span>按本人准备情况勾选</span>
-      </div>
-      <progress
-        value={completed}
-        max={items.length || 1}
-        aria-label="准备进度"
-      />
+      {items.length > 0 && (
+        <>
+          <div className="preparation-summary">
+            <strong>
+              已完成 {completed} / {items.length}
+            </strong>
+            <span>按本人准备情况勾选</span>
+          </div>
+          <progress
+            value={completed}
+            max={items.length || 1}
+            aria-label="准备进度"
+          />
+        </>
+      )}
       {groups.map((g) => (
         <details className="preparation-group" key={g} open>
           <summary>
@@ -97,9 +101,11 @@ export function PreparationChecklist({
         </details>
       ))}
       {!items.length && (
-        <p className="muted">
-          添加需要准备的物品或提前办理的事项。每位成员分别记录完成情况。
-        </p>
+        <div className="surface empty-state">
+          <Check size={30} />
+          <h3>还没有准备事项</h3>
+          <p>添加需要携带的物品或提前办理的事项，每位成员分别勾选。</p>
+        </div>
       )}
       <button
         className="secondary-button w-full"

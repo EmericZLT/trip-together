@@ -73,7 +73,6 @@ export type Receipt = TripDocument & {
 };
 export type Expense = {
   created_by?: string;
-  pending_id?: string | null;
   source_document_id?: string | null;
   id: string;
   payer_id: string;
@@ -87,14 +86,6 @@ export type Expense = {
   source: string;
   version: number;
 };
-export type PendingCost = {
-  id: string;
-  title: string;
-  amount: number;
-  currency: Currency;
-  note: string;
-  document_id: string;
-};
 export type TripData = {
   trip: Trip;
   preparation: PreparationItem[];
@@ -104,7 +95,6 @@ export type TripData = {
   documents: TripDocument[];
   expenses: Expense[];
   receipts: Receipt[];
-  pendingCosts: PendingCost[];
   packing: string[];
 };
 export const categories = [

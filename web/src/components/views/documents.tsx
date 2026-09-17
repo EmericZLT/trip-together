@@ -143,28 +143,45 @@ export function Documents({
           </button>
         ))}
       </div>
-      {filter === "全部" && !query && (
+      {documents.length > 0 && filter === "全部" && !query && (
         <div className="info-strip">
           <Plane size={19} />
           <span>“我的机票”中可以查看和出示本人的机票。</span>
         </div>
       )}
       <p className="list-caption">{filtered.length} 份文件</p>
-      <div className="surface divided">
-        {filtered.map((doc) => (
-          <DocumentRow
-            key={doc.id}
-            doc={doc}
-            onOpen={onOpen}
-            onRemove={doc.trip_id ? () => setDeleting(doc) : undefined}
-          />
-        ))}
-      </div>
+      {filtered.length > 0 && (
+        <div className="surface divided">
+          {filtered.map((doc) => (
+            <DocumentRow
+              key={doc.id}
+              doc={doc}
+              onOpen={onOpen}
+              onRemove={doc.trip_id ? () => setDeleting(doc) : undefined}
+            />
+          ))}
+        </div>
+      )}
       {!filtered.length && (
-        <div className="empty-state">
+        <div className="surface empty-state">
           <FolderOpen size={30} />
-          <h3>没有找到这份资料</h3>
-          <p>尝试其他关键词或分类。</p>
+          <h3>{documents.length ? "没有找到这份资料" : "还没有旅行资料"}</h3>
+          <p>
+            {documents.length
+              ? "尝试其他关键词或分类。"
+              : "上传机票、住宿凭证或行程文件，方便旅行时查看。"}
+          </p>
+          <button
+            className="text-action"
+            onClick={() => {
+              if (documents.length) {
+                setQuery("");
+                setFilter("全部");
+              } else setUploading(true);
+            }}
+          >
+            {documents.length ? "清除筛选" : "上传第一份资料"}
+          </button>
         </div>
       )}
     </section>

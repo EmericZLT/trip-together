@@ -18,14 +18,12 @@ const schema = z.object({
   participants: z.array(z.string()).min(1, "至少选择一位分摊成员").max(100),
   note: z.string().trim().max(1000),
   version: z.number().int().positive().optional(),
-  pendingId: z.string().optional(),
   receiptIds: z.array(z.string().uuid()).max(5).optional(),
 });
 type Existing = {
   payer_id: string;
   created_by: string;
   version: number;
-  pending_id: string | null;
 };
 export async function saveExpense(
   request: Request,
@@ -49,7 +47,7 @@ export async function saveExpense(
     throw new HttpError(400, "分摊成员无效");
   const id = expenseId ?? input.id ?? crypto.randomUUID();
   const existing = await env.DB.prepare(
-    "SELECT payer_id,created_by,version,pending_id FROM expenses WHERE id=? AND trip_id=?",
+    "SELECT payer_id,created_by,version FROM expenses WHERE id=? AND trip_id=?",
   )
     .bind(id, tripId)
     .first<Existing>();
@@ -63,20 +61,6 @@ export async function saveExpense(
     if (existing.created_by !== memberId)
       throw new HttpError(409, "支出编号冲突");
     return json({ ok: true, id });
-  }
-  if (!expenseId && input.pendingId) {
-    const pending = await env.DB.prepare(
-      "SELECT id FROM pending_costs WHERE id=? AND trip_id=?",
-    )
-      .bind(input.pendingId, tripId)
-      .first();
-    if (!pending) throw new HttpError(404, "预订不存在");
-    const used = await env.DB.prepare(
-      "SELECT id FROM expenses WHERE pending_id=? AND trip_id=?",
-    )
-      .bind(input.pendingId, tripId)
-      .first();
-    if (used) throw new HttpError(409, "这项预订已经确认，请刷新账本");
   }
   if (
     input.receiptIds &&
@@ -121,7 +105,7 @@ export async function saveExpense(
   else
     statements.push(
       env.DB.prepare(
-        "INSERT INTO expenses (id,trip_id,payer_id,created_by,title,amount,currency,category,date,participants,note,pending_id,write_token) VALUES (?,?,?,?,?,?,?,'其他',?,?,?,?,?)",
+        "INSERT INTO expenses (id,trip_id,payer_id,created_by,title,amount,currency,category,date,participants,note,write_token) VALUES (?,?,?,?,?,?,?,'其他',?,?,?,?)",
       ).bind(
         id,
         tripId,
@@ -133,7 +117,6 @@ export async function saveExpense(
         input.date,
         JSON.stringify(input.participants),
         input.note,
-        input.pendingId ?? null,
         token,
       ),
     );

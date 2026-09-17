@@ -44,6 +44,8 @@ test("线上认证页面展示邮箱验证码和发送倒计时", async ({
     route.fulfill({ json: { ok: true, retryAfter: 60 } }),
   );
   await page.goto("/");
+  await expect(page.getByLabel("邮箱验证码")).toHaveCount(0);
+  await page.getByRole("button", { name: "注册新账号" }).click();
   await page.getByLabel("邮箱", { exact: true }).fill("preview@example.test");
   await page.getByRole("button", { name: "发送验证码", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText(
@@ -64,6 +66,8 @@ test("线上认证页面展示邮箱验证码和发送倒计时", async ({
     path: `.local/login-email-${browserName}.png`,
     fullPage: true,
   });
+  await page.getByRole("button", { name: "返回登录" }).click();
+  await expect(page.getByLabel("邮箱验证码")).toHaveCount(0);
   await page.getByRole("button", { name: "注册新账号" }).click();
   await expect(page.getByLabel("邮箱验证码")).toBeVisible();
   await page.getByRole("button", { name: "忘记密码", exact: true }).click();

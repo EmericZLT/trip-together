@@ -15,7 +15,10 @@ Object.defineProperty(crypto.subtle, "timingSafeEqual", {
   value: timingSafeEqual,
   configurable: true,
 });
-async function fixture(legacy = false) {
+async function fixture(
+  legacy = false,
+  beforeCleanup?: (db: D1Database) => Promise<void>,
+) {
   const mf = new Miniflare({
     workers: [
       {
@@ -43,7 +46,9 @@ async function fixture(legacy = false) {
     "0001_initial.sql",
     "0002_email_auth.sql",
     "0003_short_invites.sql",
+    "0004_remove_pending_costs.sql",
   ]) {
+    if (file === "0004_remove_pending_costs.sql") await beforeCleanup?.(DB);
     const sql = await readFile(`infra/schema/${file}`, "utf8");
     await DB.exec(sql.replace(/--[^\n]*/g, "").replace(/\n/g, " "));
     if (legacy && file === "0001_initial.sql") {
@@ -116,16 +121,9 @@ test("生产邮箱验证覆盖注册、登录、重置、旧账号绑定和会�
       { email: "second@example.test", password, name: "测试", code },
       400,
     );
-    await call("login", { email, password }, 400);
-    await call("login", { email, password, code }, 400);
-    const loginCode = await issue("login");
-    await call(
-      "login",
-      { email, password: "Wrong-password", code: loginCode },
-      401,
-    );
-    await call("login", { email, password, code: loginCode });
-    await call("login", { email, password, code: loginCode }, 400);
+    await call("login", { email, password });
+    await call("login", { email, password: "Wrong-password" }, 401);
+    await call("email-code", { email, purpose: "login" }, 400);
     const resetCode = await issue("recover");
     await call("recover", {
       email,
@@ -137,11 +135,10 @@ test("生产邮箱验证覆盖注册、登录、重置、旧账号绑定和会�
       0,
     );
     await call("recover", { email, password, code: resetCode }, 400);
-    await call("login", { email, password, code: await issue("login") }, 401);
+    await call("login", { email, password }, 401);
     await call("login", {
       email,
       password: password + "new",
-      code: await issue("login"),
     });
     await DB.prepare(
       "UPDATE members SET email='other@example.test' WHERE email=?",
@@ -229,6 +226,58 @@ test("验证码用途隔离、失效、最多五次、并发单次消费、发�
     await consumeCode(local, env, email, "register");
     env.APP_ENV = "production";
     assert.equal(verificationRequired(local, env), true);
+  } finally {
+    await f.mf.dispose();
+  }
+});
+
+test("removing pending bookings preserves paid expenses, receipts and source documents", async () => {
+  const f = await fixture(true, async (db) => {
+    await db.exec(
+      "INSERT INTO documents(id,trip_id,name,category,r2_key,mime,size,uploaded_by) VALUES ('doc','legacy-trip','source','travel','private/source','application/pdf',10,'legacy');",
+    );
+    await db.exec(
+      "INSERT INTO pending_costs(id,trip_id,title,amount,currency,document_id) VALUES ('pending','legacy-trip','booking',100,'USD','doc');",
+    );
+    await db.exec(
+      "INSERT INTO expenses(id,trip_id,payer_id,created_by,title,amount,currency,date,participants,pending_id) VALUES ('paid','legacy-trip','legacy','legacy','paid',100,'USD','2030-01-01','[\"legacy\"]','pending');",
+    );
+    await db.exec(
+      "INSERT INTO receipts(id,trip_id,uploaded_by,expense_id,name,mime,size,r2_key) VALUES ('receipt','legacy-trip','legacy','paid','receipt','image/png',10,'private/receipt');",
+    );
+  });
+  try {
+    const row = await f.DB.prepare(
+      "SELECT * FROM expenses WHERE id='paid'",
+    ).first();
+    assert.equal(row?.amount, 100);
+    assert.equal(
+      await f.DB.prepare(
+        "SELECT expense_id FROM receipts WHERE id='receipt'",
+      ).first("expense_id"),
+      "paid",
+    );
+    assert.equal(row?.source_document_id, "doc");
+    assert.ok(!("pending_id" in row!));
+    assert.equal(
+      await f.DB.prepare(
+        "SELECT count(*) AS n FROM sqlite_master WHERE name='pending_costs'",
+      ).first("n"),
+      0,
+    );
+    await f.DB.exec("DELETE FROM documents WHERE id='doc';");
+    assert.equal(
+      await f.DB.prepare(
+        "SELECT source_document_id FROM expenses WHERE id='paid'",
+      ).first("source_document_id"),
+      null,
+    );
+    assert.equal(
+      await f.DB.prepare(
+        "SELECT count(*) AS n FROM pragma_foreign_key_check",
+      ).first("n"),
+      0,
+    );
   } finally {
     await f.mf.dispose();
   }

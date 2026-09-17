@@ -250,16 +250,28 @@ export function EventDetail({
             {event.phone}
           </a>
         )}
-        <div className="detail-note">
-          <AlertCircle size={18} />
-          <p>{event.note}</p>
-        </div>
+        {event.note && (
+          <div className="detail-note">
+            <AlertCircle size={18} />
+            <p>{event.note}</p>
+          </div>
+        )}
         <SectionTitle>相关凭证</SectionTitle>
-        <div className="surface divided">
-          {docs.map((d) => (
-            <DocumentRow key={d.id} doc={d} onOpen={onDocument} />
-          ))}
-        </div>
+        {docs.length ? (
+          <div className="surface divided">
+            {docs.map((d) => (
+              <DocumentRow key={d.id} doc={d} onOpen={onDocument} />
+            ))}
+          </div>
+        ) : (
+          <div className="surface empty-state">
+            <h3>尚未关联凭证</h3>
+            <p>上传旅行资料后，可以在修改事项时关联。</p>
+            <button className="text-action" onClick={() => onEdit(event)}>
+              关联凭证
+            </button>
+          </div>
+        )}
         <p className="source-note">资料来源：{event.source || "尚未填写"}</p>
         <div className="form-actions">
           <button className="secondary-button" onClick={() => onEdit(event)}>

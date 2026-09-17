@@ -10,7 +10,7 @@ import {
   JapaneseYen,
   ArrowRightLeft,
 } from "lucide-react";
-import type { Expense, TripData, Currency, PendingCost } from "@/lib/models";
+import type { Expense, TripData, Currency } from "@/lib/models";
 import { ReceiptPicker, useReceipts } from "./ledger/receipt-picker";
 import { localDate, selectEvents } from "@/lib/time";
 import { currencyLabel } from "@/lib/money";
@@ -18,29 +18,23 @@ import { api } from "@/lib/api";
 import { Sheet } from "./ui";
 export function ExpenseEditor({
   expense,
-  pending,
   data,
   onClose,
   onSaved,
 }: {
   expense: Expense | null;
-  pending?: PendingCost | null;
   data: TripData;
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
-  const [title, setTitle] = useState(expense?.title ?? pending?.title ?? "");
+  const [title, setTitle] = useState(expense?.title ?? "");
   const [amount, setAmount] = useState(
-    expense || pending?.amount
-      ? ((expense?.amount ?? pending!.amount) / 100).toFixed(2)
-      : "",
+    expense ? (expense.amount / 100).toFixed(2) : "",
   );
   const [currency, setCurrency] = useState<Currency>(
-    expense?.currency ?? pending?.currency ?? data.trip.currency,
+    expense?.currency ?? data.trip.currency,
   );
-  const [payerId, setPayerId] = useState(
-    expense?.payer_id ?? (pending ? "" : data.me.id),
-  );
+  const [payerId, setPayerId] = useState(expense?.payer_id ?? data.me.id);
   const receipts = useReceipts(
     data.receipts.filter((r) => r.expense_id === expense?.id),
   );
@@ -88,7 +82,6 @@ export function ExpenseEditor({
           amount: Math.round(Number(amount) * 100),
           currency,
           payerId,
-          pendingId: pending?.id,
           receiptIds,
           date,
           participants,
@@ -125,7 +118,7 @@ export function ExpenseEditor({
     <Sheet
       open
       onClose={() => !busy && close()}
-      title={expense ? "编辑支出" : pending ? "确认预订支出" : "新增支出"}
+      title={expense ? "编辑支出" : "新增支出"}
       className="expense-sheet"
     >
       <form className="expense-form" onSubmit={save}>
@@ -238,7 +231,7 @@ export function ExpenseEditor({
           ) : (
             <>
               <Check size={18} />
-              {expense ? "保存修改" : pending ? "确认并计入账本" : "保存支出"}
+              {expense ? "保存修改" : "保存支出"}
             </>
           )}
         </button>

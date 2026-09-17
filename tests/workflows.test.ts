@@ -89,12 +89,6 @@ test("空白注册、多行程、邀请和完整旅行录入", async () => {
   const receipt = crypto.randomUUID();
   await a.upload(prefix + `/receipts/${receipt}`);
   await b.file(receipt, 404);
-  const pending = await a.request(prefix + "/pending-costs", "POST", {
-    title: "住宿预订",
-    amount: 0,
-    currency: "EUR",
-    document_id: d,
-  });
   const expense = {
     id: crypto.randomUUID(),
     title: "住宿费用",
@@ -104,7 +98,6 @@ test("空白注册、多行程、邀请和完整旅行录入", async () => {
     payerId: b.id,
     participants: [a.id, b.id],
     note: "",
-    pendingId: pending.id,
     receiptIds: [receipt],
   };
   await a.request(prefix + "/expenses", "POST", expense);
@@ -113,7 +106,7 @@ test("空白注册、多行程、邀请和完整旅行录入", async () => {
   data = await b.request(prefix + "/data");
   assert.equal(data.expenses.length, 1);
   assert.equal(data.expenses[0].created_by, a.id);
-  assert.equal(data.pendingCosts.length, 0);
+  assert.ok(!("pendingCosts" in data));
   assert.ok(!data.documents.some((x: { id: string }) => x.id === personal));
   assert.ok(!("passport" in data.members[0]));
   await b.request(prefix + `/expenses/${expense.id}`, "PUT", {
@@ -146,12 +139,11 @@ test("空白注册、多行程、邀请和完整旅行录入", async () => {
       id: crypto.randomUUID(),
       participants: [outsider.id],
       payerId: outsider.id,
-      pendingId: undefined,
     },
     403,
   );
   await b.request(prefix + `/expenses/${expense.id}`, "DELETE", { version: 2 });
-  assert.equal((await a.request(prefix + "/data")).pendingCosts.length, 1);
+  assert.equal((await a.request(prefix + "/data")).expenses.length, 0);
   await b.file(receipt, 404);
   await a.file(receipt);
   await a.request(prefix + `/documents/${d}`, "DELETE");

@@ -61,7 +61,7 @@ env -u CLOUDFLARE_API_TOKEN npx wrangler email sending dns get travel.example.co
 
 将发件地址替换为已验证域名下的实际地址。不要设置 `destination_address` 或 `allowed_destination_addresses`，注册用户需要接收各自的验证码。Worker 使用原生 `EMAIL.send()`，无需额外的邮件 API Token。详情见 [Workers API](https://developers.cloudflare.com/email-service/api/send-emails/workers-api/)。
 
-生产环境的注册、登录、重置密码与旧账号绑定邮箱均要求一次性验证码。验证码有效期为 10 分钟，同一邮箱和用途的发送间隔为 60 秒，最多尝试 5 次。邮件发送失败会显示错误，不能绕过邮箱验证。
+登录只验证邮箱与密码。生产环境的注册、重置密码与旧账号绑定邮箱要求一次性验证码。验证码有效期为 10 分钟，同一邮箱和用途的发送间隔为 60 秒，最多尝试 5 次。邮件发送失败会显示错误，不能绕过邮箱验证。
 
 本地运行 `npm run setup`，会在忽略文件 `infra/.dev.vars` 中设置 `APP_ENV=local`。本地 HTTP loopback 或局域网地址跳过验证码，不发送邮件；仍然要求有效邮箱格式与密码。不要将本地端口通过隧道公开，也不要配置 `send_email.remote=true`。生产配置必须使用 `APP_ENV=production`，发布脚本会检查。
 
@@ -108,3 +108,5 @@ npx wrangler d1 time-travel info DB --config infra/wrangler.production.jsonc
 ## 开源仓库
 
 当前分支可能继承含有私人资料的历史。应使用 `npm run export:source` 导出当前干净快照，解压后创建新仓库；不要直接 push 旧历史到公开仓库。
+
+升级至 0004 migration 后移除待核对预订表与支出关联字段；已记录支出、金额和成员保持不变，原凭证关联保留为 source_document_id。升级后不再提供待核对预订接口或登录验证码发送接口。

@@ -8,11 +8,10 @@ export const emailAddress = z
   .toLowerCase()
   .email("请输入有效的邮箱地址")
   .max(254);
-const purposes = z.enum(["register", "login", "recover", "migrate"]);
+const purposes = z.enum(["register", "recover", "migrate"]);
 type Purpose = z.infer<typeof purposes>;
 const labels: Record<Purpose, string> = {
   register: "注册账号",
-  login: "登录账号",
   recover: "重置密码",
   migrate: "绑定邮箱",
 };

@@ -87,7 +87,6 @@ export async function login(request: Request, env: Env) {
   );
   if (!member || !equal(hash, member.password_hash))
     throw new HttpError(401, "邮箱或密码不正确");
-  await consumeCode(request, env, input.email, "login", input.code);
   return session(request, env, member.id);
 }
 export async function recover(request: Request, env: Env) {

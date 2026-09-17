@@ -173,11 +173,7 @@ export function ExpenseDetail({
               {deleted
                 ? "记录已删除，点击重试刷新账本。"
                 : "确定删除这笔支出吗？"}
-              <small>
-                {expense.pending_id
-                  ? "删除后会从统计中移除，预订恢复为待核对。"
-                  : "删除后会从账本和分摊统计中移除。"}
-              </small>
+              <small>删除后会从账本和分摊统计中移除。</small>
             </p>
             <div>
               <button

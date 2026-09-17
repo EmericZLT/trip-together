@@ -5,22 +5,13 @@ import { useMemo, useState } from "react";
 import {
   Plus,
   ArrowDownToLine,
-  ArrowUpRight,
   ChevronRight,
   ReceiptText,
   Info,
 } from "lucide-react";
-import type {
-  Currency,
-  Expense,
-  TripData,
-  TripDocument,
-  PendingCost,
-} from "@/lib/models";
+import type { Currency, Expense, TripData, TripDocument } from "@/lib/models";
 import { money, summarize, currencyLabel } from "@/lib/money";
-import { SectionTitle } from "../ui";
 import { ExpenseDetail } from "../ledger/expense-detail";
-import { PendingManager } from "../ledger/pending-manager";
 import { ExpenseEditor } from "../expense-editor";
 export function Ledger({
   data,
@@ -36,7 +27,6 @@ export function Ledger({
     [view, setView] = useState<"records" | "members">("records");
   const [editor, setEditor] = useState<Expense | null | undefined>(undefined),
     [detail, setDetail] = useState<Expense | null>(null);
-  const [pending, setPending] = useState<PendingCost | null>(null);
   const totals = useMemo(
     () => summarize(data.expenses, data.members, currency),
     [data, currency],
@@ -92,7 +82,6 @@ export function Ledger({
           <ArrowDownToLine size={20} />
         </button>
       </div>
-      <PendingManager data={data} onRefresh={onRefresh} />
       <div className="ledger-summary">
         <div className="summary-top">
           <span>已记录支出</span>
@@ -138,7 +127,6 @@ export function Ledger({
       <button
         className="primary-button w-full add-expense"
         onClick={() => {
-          setPending(null);
           setEditor(null);
         }}
       >
@@ -173,36 +161,44 @@ export function Ledger({
               all
             />
           </div>
-          <div className="surface divided">
-            {records.map((e) => (
-              <button
-                key={e.id}
-                onClick={() => setDetail(e)}
-                className="expense-row"
-              >
-                <Avatar
-                  member={data.members.find((m) => m.id === e.payer_id)}
-                  className="expense-avatar"
-                />
-                <div>
-                  <strong>{e.title}</strong>
-                  <small>
-                    {data.members.find((m) => m.id === e.payer_id)?.name} ·{" "}
-                    {e.date.slice(5).replace("-", ".")}
-                  </small>
-                </div>
-                <span className="expense-amount">
-                  {money(e.amount, e.currency)}
-                  <ChevronRight size={14} />
-                </span>
-              </button>
-            ))}
-          </div>
+          {records.length > 0 && (
+            <div className="surface divided">
+              {records.map((e) => (
+                <button
+                  key={e.id}
+                  onClick={() => setDetail(e)}
+                  className="expense-row"
+                >
+                  <Avatar
+                    member={data.members.find((m) => m.id === e.payer_id)}
+                    className="expense-avatar"
+                  />
+                  <div>
+                    <strong>{e.title}</strong>
+                    <small>
+                      {data.members.find((m) => m.id === e.payer_id)?.name} ·{" "}
+                      {e.date.slice(5).replace("-", ".")}
+                    </small>
+                  </div>
+                  <span className="expense-amount">
+                    {money(e.amount, e.currency)}
+                    <ChevronRight size={14} />
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
           {!records.length && (
-            <div className="empty-state">
+            <div className="surface empty-state">
               <ReceiptText size={30} />
-              <h3>暂无支出记录</h3>
-              <p>点击“新增支出”添加记录。</p>
+              <h3>
+                {data.expenses.length ? "当前筛选下没有支出" : "还没有支出记录"}
+              </h3>
+              <p>
+                {data.expenses.length
+                  ? "试试其他币种或付款人。"
+                  : "记录第一笔支出，自动计算同行成员的分摊。"}
+              </p>
             </div>
           )}
           <p className="list-caption">
@@ -247,53 +243,12 @@ export function Ledger({
         <Info size={15} />
         不同币种分别计算；分摊按整数分分配，余额未扣除线下转账。
       </p>
-      <SectionTitle>待核对的预订</SectionTitle>
-      <p className="muted text-sm mb-3">
-        点击预订，确认实际付款人和金额后计入账本。
-      </p>
-      <div className="surface divided">
-        {data.pendingCosts.map((p) => (
-          <div className="pending-row" key={p.id}>
-            <button
-              className="pending-confirm"
-              aria-label={`确认${p.title}`}
-              onClick={() => {
-                setPending(p);
-                setEditor(null);
-              }}
-            >
-              <strong>{p.title}</strong>
-              <span>
-                {p.amount
-                  ? `${money(p.amount, p.currency)} ${p.currency}`
-                  : "金额待确认"}
-                <ChevronRight size={15} />
-              </span>
-            </button>
-            <p>{p.note}</p>
-            {data.documents.some((d) => d.id === p.document_id) && (
-              <button
-                className="text-action"
-                onClick={() => {
-                  const d = data.documents.find((d) => d.id === p.document_id);
-                  if (d) onDocument(d);
-                }}
-              >
-                核对原始凭证
-                <ArrowUpRight size={14} />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
       {editor !== undefined && (
         <ExpenseEditor
           expense={editor}
-          pending={pending}
           data={data}
           onClose={() => {
             setEditor(undefined);
-            setPending(null);
           }}
           onSaved={onRefresh}
         />
@@ -305,7 +260,6 @@ export function Ledger({
           onClose={() => setDetail(null)}
           onRefresh={onRefresh}
           onEdit={(expense) => {
-            setPending(null);
             setEditor(expense);
             setDetail(null);
           }}

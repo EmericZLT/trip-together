@@ -71,7 +71,12 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
     try {
       await api(`/${mode === "migrate" ? "migrate-account" : mode}`, {
         method: "POST",
-        body: JSON.stringify({ email, password, code, legacyUsername }),
+        body: JSON.stringify({
+          email,
+          password,
+          ...(mode !== "login" ? { code } : {}),
+          legacyUsername,
+        }),
       });
       if (mode === "recover") {
         switchMode("login");
@@ -156,7 +161,7 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
               <small>至少 10 个字符，区分大小写</small>
             )}
           </label>
-          {required && (
+          {required && mode !== "login" && (
             <label>
               邮箱验证码
               <div className="email-code-field">

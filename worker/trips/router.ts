@@ -1,7 +1,7 @@
 import { HttpError } from "../http";
 import { requireTrip } from "./access";
 import { updateTrip, deleteTrip, invite } from "./manage";
-import { saveEvent, deleteEvent, preparation, pendingCost } from "./content";
+import { saveEvent, deleteEvent, preparation } from "./content";
 import { tripData, packing } from "../data";
 import { saveExpense, deleteExpense } from "../finance/expenses";
 import { uploadReceipt, deleteDraftReceipt } from "../finance/receipts";
@@ -33,11 +33,6 @@ export async function tripRouter(
     ((method === "POST" && !id) || (method === "DELETE" && id))
   )
     return preparation(request, env, tripId, id);
-  if (
-    resource === "pending-costs" &&
-    ((method === "POST" && !id) || (method === "DELETE" && id))
-  )
-    return pendingCost(request, env, tripId, memberId, id);
   if (resource === "packing" && method === "PUT")
     return packing(request, env, memberId, tripId);
   if (resource === "expenses") {
