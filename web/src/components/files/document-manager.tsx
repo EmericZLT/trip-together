@@ -1,17 +1,11 @@
 "use client";
-import { useId, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { TripDocument } from "@/lib/models";
 import { api, apiUrl } from "@/lib/api";
 import { uploadFile } from "@/lib/files/upload";
 import { SheetForm, SheetFooter, Sheet } from "../ui";
-import { FilePreview } from "./file-preview";
-type UploadItem = {
-  id: string;
-  file: File;
-  progress: number;
-  done: boolean;
-  error: string;
-};
+import { CategorySelect } from "./category-select";
+import { UploadGrid, type UploadItem } from "./upload-grid";
 export function DocumentUpload({
   onClose,
   onSaved,
@@ -25,7 +19,6 @@ export function DocumentUpload({
   category?: string;
   categories?: string[];
 }) {
-  const categoryId = useId();
   const [items, setItems] = useState<UploadItem[]>([]),
     [category, setCategory] = useState(initialCategory),
     [privateFile, setPrivate] = useState(false),
@@ -100,101 +93,36 @@ export function DocumentUpload({
       hasChanges={remaining.length > 0}
       open
       title="上传旅行资料"
+      className="document-upload-sheet"
       onClose={() => !busy && onClose()}
     >
       <SheetForm className="editor-form" onSubmit={save}>
-        <label>
-          资料分类
-          <input
-            aria-label="资料分类"
-            required
-            maxLength={60}
-            list={categoryId}
-            value={category}
-            disabled={busy || locked}
-            placeholder="选择分类，或输入新分类"
-            onChange={(e) => setCategory(e.target.value)}
-          />
-          <datalist id={categoryId}>
-            {[
-              ...new Set([
-                "行程",
-                "交通",
-                "住宿",
-                "活动",
-                "其他",
-                ...categories,
-              ]),
-            ].map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
-          <small>可以选择已有分类，也可以直接输入名称新建分类。</small>
-        </label>
-        <label className="file-drop">
-          ＋ 选择照片或文件
-          <input
-            type="file"
-            aria-label="选择照片或文件"
-            multiple
-            disabled={busy}
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            onChange={(e) => {
-              const selected = Array.from(e.target.files ?? []);
-              setItems((prev) => [
-                ...prev,
-                ...selected.map((file) => ({
-                  id: crypto.randomUUID(),
-                  file,
-                  progress: 0,
-                  done: false,
-                  error: "",
-                })),
-              ]);
-              e.target.value = "";
-            }}
-          />
-          <small>可多选，照片自动压缩；支持图片和 PDF。</small>
-        </label>
-        {items.map((item) => (
-          <div className="upload-item" key={item.id}>
-            <FilePreview file={item.file} />
-            <div>
-              <strong>{item.file.name}</strong>
-              {item.done ? (
-                <small>上传完成</small>
-              ) : (
-                <small>
-                  {active === item.id ? `上传中 ${item.progress}%` : "等待上传"}
-                </small>
-              )}
-              {!item.done && active === item.id && (
-                <progress
-                  value={item.progress}
-                  max={100}
-                  aria-label={`${item.file.name}上传进度`}
-                />
-              )}{" "}
-              {item.error && (
-                <p role="alert" className="error-message">
-                  {item.error}
-                </p>
-              )}
-            </div>
-            {!busy && !item.done && (
-              <button
-                type="button"
-                className="text-action"
-                aria-label={`移除${item.file.name}`}
-                onClick={() =>
-                  setItems((prev) => prev.filter((i) => i.id !== item.id))
-                }
-              >
-                移除
-              </button>
-            )}
-          </div>
-        ))}
+        <CategorySelect
+          value={category}
+          categories={categories}
+          disabled={busy || locked}
+          onChange={setCategory}
+        />
+        <UploadGrid
+          items={items}
+          busy={busy}
+          active={active}
+          onAdd={(files) =>
+            setItems((prev) => [
+              ...prev,
+              ...files.map((file) => ({
+                id: crypto.randomUUID(),
+                file,
+                progress: 0,
+                done: false,
+                error: "",
+              })),
+            ])
+          }
+          onRemove={(id) =>
+            setItems((prev) => prev.filter((item) => item.id !== id))
+          }
+        />
         <details className="upload-visibility">
           <summary>
             可见范围：{privateFile ? "仅自己可见" : "同行成员可见"}

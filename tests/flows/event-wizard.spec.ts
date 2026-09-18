@@ -80,6 +80,8 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   await page.getByRole("button", { name: /埃菲尔铁塔.*Paris/ }).click();
   await next();
   await page.getByRole("button", { name: "上传并关联资料" }).click();
+  await page.getByRole("combobox", { name: "资料分类" }).fill("景点门票");
+  await page.getByText("新建分类「景点门票」", { exact: true }).click();
   await page.getByLabel("选择照片或文件").setInputFiles({
     name: "参观凭证.png",
     mimeType: "image/png",
@@ -90,6 +92,19 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   await expect(
     page.getByRole("checkbox", { name: "参观凭证.png" }),
   ).toBeChecked();
+  await page.getByRole("button", { name: "上传并关联资料" }).click();
+  const uploadDialog = page.getByRole("dialog", {
+    name: "上传旅行资料",
+    exact: true,
+  });
+  await uploadDialog.getByRole("combobox", { name: "资料分类" }).click();
+  await expect(
+    uploadDialog
+      .locator(".ant-select-item-option")
+      .filter({ hasText: /^景点门票$/ }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await uploadDialog.getByRole("button", { name: "关闭", exact: true }).click();
   await page.screenshot({ path: `.local/wizard-documents-${browserName}.png` });
   for (let i = 0; i < 3; i++)
     await page.getByRole("button", { name: "上一步", exact: true }).click();

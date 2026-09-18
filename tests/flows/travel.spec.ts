@@ -53,6 +53,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
     buffer: png,
   });
   await page.getByLabel("资料分类", { exact: true }).fill("交通");
+  await page.getByText("交通", { exact: true }).last().click();
   await page
     .getByRole("button", { name: "上传 1 份资料", exact: true })
     .click();

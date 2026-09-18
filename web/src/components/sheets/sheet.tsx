@@ -111,6 +111,15 @@ export function Sheet({
       <Dialog.Portal>
         <Dialog.Overlay className="sheet-overlay" />
         <Dialog.Content
+          onEscapeKeyDown={(event) => {
+            // Let an open combobox handle Escape before dismissing its sheet.
+            if (
+              (event.target as HTMLElement)?.closest(
+                '[role="combobox"][aria-expanded="true"]',
+              )
+            )
+              event.preventDefault();
+          }}
           ref={content}
           className={`sheet ${wide ? "sheet-wide" : ""} ${className}`}
           aria-describedby={description ? descriptionId : undefined}

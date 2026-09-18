@@ -112,6 +112,7 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
 });
 test("新增目的地与币种采用中文；失败重试不重复上传成功文件", async ({
   page,
+  browserName,
 }) => {
   const account = await new Client().register();
   const tripId = await createTrip(account);
@@ -119,6 +120,7 @@ test("新增目的地与币种采用中文；失败重试不重复上传成功�
   await page.getByRole("button", { name: "资料", exact: true }).click();
   await page.getByRole("button", { name: "上传旅行资料", exact: true }).click();
   await page.getByLabel("资料分类", { exact: true }).fill("旅行保险");
+  await page.getByText("新建分类「旅行保险」", { exact: true }).last().click();
   await expect(
     page.getByText("可以选择已有分类，也可以直接输入名称新建分类。"),
   ).toBeVisible();
@@ -128,8 +130,13 @@ test("新增目的地与币种采用中文；失败重试不重复上传成功�
   await expect(
     page.getByText("可见范围：同行成员可见", { exact: true }),
   ).toBeVisible();
+  let releaseUpload!: () => void;
+  const pendingUpload = new Promise<void>((resolve) => {
+    releaseUpload = resolve;
+  });
   let fail = true;
   await page.route("**/documents/*", async (route) => {
+    if (route.request().method() === "PUT") await pendingUpload;
     if (
       route.request().method() === "PUT" &&
       decodeURIComponent(route.request().headers()["x-file-name"] ?? "") ===
@@ -149,6 +156,16 @@ test("新增目的地与币种采用中文；失败重试不重复上传成功�
     { name: "失败后重试.png", mimeType: "image/png", buffer: png },
   ]);
   await page.getByRole("button", { name: "上传 2 份资料" }).click();
+  const progress = page.getByRole("progressbar", {
+    name: "已完成.png上传进度",
+  });
+  await expect(progress).toBeVisible();
+  await expect(progress.locator("svg.ant-progress-circle")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "添加照片或文件", exact: true }),
+  ).toBeDisabled();
+  await page.screenshot({ path: `.local/document-upload-${browserName}.png` });
+  releaseUpload();
   await expect(page.getByText("网络繁忙，请重试")).toBeVisible();
   await page.getByRole("button", { name: "重试未完成的文件" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -162,6 +179,32 @@ test("新增目的地与币种采用中文；失败重试不重复上传成功�
       (d: any) => d.category === "旅行保险" && d.owner_id === null,
     ),
   ).toBe(true);
+  await page.getByRole("button", { name: "上传旅行资料", exact: true }).click();
+  await page.getByRole("combobox", { name: "资料分类", exact: true }).click();
+  await expect(
+    page.locator(".ant-select-item-option").filter({ hasText: /^旅行保险$/ }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "关闭", exact: true }).click();
+  await page.reload();
+  await page.getByRole("button", { name: "资料", exact: true }).click();
+  await page.getByRole("button", { name: "上传旅行资料", exact: true }).click();
+  const category = page.getByRole("combobox", {
+    name: "资料分类",
+    exact: true,
+  });
+  await category.click();
+  await expect(
+    page.locator(".ant-select-item-option").filter({ hasText: /^旅行保险$/ }),
+  ).toBeVisible();
+  await page
+    .locator(".ant-select-item-option")
+    .filter({ hasText: /^旅行保险$/ })
+    .click();
+  await expect(page.locator(".category-field .ant-select")).toContainText(
+    "旅行保险",
+  );
+  await page.getByRole("button", { name: "关闭", exact: true }).click();
   await page.getByRole("button", { name: "账本", exact: true }).click();
   await page.getByRole("button", { name: "新增支出" }).click();
   const switchCurrency = page.getByRole("button", {
