@@ -118,3 +118,9 @@ npm run analytics:setup -- --env=.local/openpanel.env --send-test
 ## 参考
 
 [Track API](https://openpanel.dev/docs/api/track)、[权限说明](https://openpanel.dev/docs/api/authentication)、[Manage API](https://openpanel.dev/docs/api/manage)、[MCP 查询能力](https://openpanel.dev/docs/mcp)、[官方 Track 实现](https://github.com/Openpanel-dev/openpanel/blob/main/apps/api/src/controllers/track.controller.ts)。
+
+## 在 OpenPanel 查看与排查
+
+打开项目的 Events，时间范围选择今天，清除事件筛选；登录查找 session_started，页面浏览查找 screen_view，新增事项查找 event_created。注册和首次邮箱验证分别是 account_registered / email_verified。展开事件查看 total_* 和 totals_sampled_at；登录、浏览不附加全量。事件使用原始发生时间，补发后应按发生时间查找。Overview 的浏览统计不能代替这些业务事件列表。
+
+正常情况下后台每 5 分钟发送一批。若超过一个周期仍无数据，检查受保护 summary 的 pending_events / retrying_events，以及后台 analytics_event_failed 的 stage / status / error。status=0 表示尚未取得 HTTP 响应，不能误判为平台拒绝。外部请求使用 manual 拒绝重定向；真实 Worker 运行时不支持 error 模式，Node 模拟测试可能无法发现差异。

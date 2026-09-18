@@ -1,3 +1,4 @@
+import { analyticsRequestOptions } from "./request";
 import {
   readTotals,
   snapshotEvents,
@@ -32,6 +33,7 @@ export async function deliverEvents(env: AnalyticsEnv) {
     failed = 0;
   const process = async (row: Row) => {
     let status = 0;
+    let stage = "prepare";
     try {
       const metadata = JSON.parse(row.data);
       // Explicit whitelist also protects against accidental future journal fields.
@@ -62,15 +64,10 @@ export async function deliverEvents(env: AnalyticsEnv) {
         config.key,
         row.actor_id ?? `event:${row.id}`,
       );
-      const response = await fetch(`${config.origin}/track`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "TripTogether-Analytics/1.0",
-          "openpanel-client-id": config.clientId,
-          "openpanel-client-secret": config.clientSecret,
-        },
-        body: JSON.stringify({
+      stage = "request";
+      const response = await fetch(
+        `${config.origin}/track`,
+        analyticsRequestOptions(config, {
           type: "track",
           payload: {
             name: row.name === "page_viewed" ? "screen_view" : row.name,
@@ -83,10 +80,9 @@ export async function deliverEvents(env: AnalyticsEnv) {
             },
           },
         }),
-        signal: AbortSignal.timeout(5000),
-        redirect: "error",
-      });
+      );
       status = response.status;
+      stage = "response";
       if (!response.ok) throw new Error("Rejected");
       const result = (await response.json()) as { sessionId?: string };
       if (!result.sessionId) throw new Error("Not collected");
@@ -96,7 +92,15 @@ export async function deliverEvents(env: AnalyticsEnv) {
         .bind(now, status, row.id, lease)
         .run();
       sent++;
-    } catch {
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          event: "analytics_event_failed",
+          stage,
+          status,
+          error: error instanceof Error ? error.name : "unknown",
+        }),
+      );
       const retryAt =
         now + Math.min(86400, 60 * 2 ** Math.min(row.attempts, 10));
       await env.DB.prepare(

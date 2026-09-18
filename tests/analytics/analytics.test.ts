@@ -194,3 +194,30 @@ test("历史账号进入总量但不伪造新增事件", async () => {
     await f.close();
   }
 });
+
+test("分析平台重定向不视为发送成功，不向新地址转发凭据", async () => {
+  const f = await fixture();
+  const original = globalThis.fetch;
+  try {
+    await f.member("redirect-test");
+    let calls = 0;
+    globalThis.fetch = async (_url, init) => {
+      calls++;
+      assert.equal(init?.redirect, "manual");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "https://other.example.test/track" },
+      });
+    };
+    assert.deepEqual(await deliverEvents(f.env), { sent: 0, failed: 1 });
+    assert.equal(calls, 1);
+    const row = await f.DB.prepare(
+      "SELECT delivered_at,last_status FROM analytics_events",
+    ).first();
+    assert.equal(row?.delivered_at, null);
+    assert.equal(row?.last_status, 302);
+  } finally {
+    globalThis.fetch = original;
+    await f.close();
+  }
+});
