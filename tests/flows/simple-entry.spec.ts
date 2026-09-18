@@ -16,6 +16,9 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
   await page.getByRole("button", { name: "行程", exact: true }).click();
   await page.getByRole("button", { name: /第 2 天/ }).click();
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
+  await expect(page.getByLabel("活动名称")).toHaveCount(0);
+  await page.screenshot({ path: `.local/event-step-one-${browserName}.png` });
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await expect(page.getByLabel("日期", { exact: true })).toHaveValue(
     "2030-06-02",
   );
@@ -23,6 +26,10 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
   await expect(page.getByLabel("开始时间", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("出发地", { exact: true })).toHaveCount(0);
   await page.getByLabel("活动名称").fill("公园散步");
+  await page.getByRole("button", { name: "上一步", exact: true }).click();
+  await expect(page.getByLabel("活动名称")).toHaveCount(0);
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
+  await expect(page.getByLabel("活动名称")).toHaveValue("公园散步");
   await page.getByRole("button", { name: "关闭", exact: true }).click();
   await expect(
     page.getByText("还有未保存的内容，要继续编辑吗？"),
@@ -47,6 +54,7 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
   expect(data.events[0].timeMode).toBe("date");
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
   await page.getByRole("button", { name: "住宿", exact: true }).click();
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await expect(page.getByLabel("出发地", { exact: true })).toHaveCount(0);
   await page.getByLabel("酒店名称").fill("湖边酒店");
   await page.getByLabel("退房日期").fill("2030-06-04");
@@ -58,6 +66,16 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
   await page.getByRole("button", { name: "上传 2 份资料" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(1);
   await expect(page.getByLabel("酒店订单.png", { exact: true })).toBeChecked();
+  const tile = page.getByRole("checkbox", {
+    name: "酒店订单.png",
+    exact: true,
+  });
+  await expect(tile.locator("img")).toHaveAttribute("src", /\/api\/files\//);
+  await tile.click();
+  await expect(tile).not.toBeChecked();
+  await tile.click();
+  await expect(tile).toBeChecked();
+  await page.screenshot({ path: `.local/document-choices-${browserName}.png` });
   await page.getByRole("button", { name: "添加住宿", exact: true }).click();
   data = await account.request(`/trips/${id}/data`);
   expect(
@@ -80,10 +98,20 @@ test("新增目的地与币种采用中文；失败重试不重复上传成功�
   page,
 }) => {
   const account = await new Client().register();
-  await createTrip(account);
+  const tripId = await createTrip(account);
   await login(page, account);
   await page.getByRole("button", { name: "资料", exact: true }).click();
   await page.getByRole("button", { name: "上传旅行资料", exact: true }).click();
+  await page.getByLabel("资料分类", { exact: true }).fill("旅行保险");
+  await expect(
+    page.getByText("可以选择已有分类，也可以直接输入名称新建分类。"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "仅自己可见", exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByText("可见范围：同行成员可见", { exact: true }),
+  ).toBeVisible();
   let fail = true;
   await page.route("**/documents/*", async (route) => {
     if (
@@ -111,6 +139,13 @@ test("新增目的地与币种采用中文；失败重试不重复上传成功�
   await expect(
     page.getByRole("button", { name: "查看已完成.png", exact: true }),
   ).toHaveCount(1);
+  const uploaded = (await account.request(`/trips/${tripId}/data`)).documents;
+  expect(uploaded).toHaveLength(2);
+  expect(
+    uploaded.every(
+      (d: any) => d.category === "旅行保险" && d.owner_id === null,
+    ),
+  ).toBe(true);
   await page.getByRole("button", { name: "账本", exact: true }).click();
   await page.getByRole("button", { name: "新增支出" }).click();
   await page.getByRole("button", { name: "币种", exact: true }).click();
@@ -156,6 +191,7 @@ test("目的地搜索、多城市保存和跨时区航班时间", async ({
   await page.getByRole("button", { name: "行程", exact: true }).click();
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
   await page.getByRole("button", { name: "航班", exact: true }).click();
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await page.getByLabel("出发地", { exact: true }).fill("上海");
   await page.getByLabel("目的地", { exact: true }).fill("东京");
   await page.getByLabel("已知起飞和落地时间").check();

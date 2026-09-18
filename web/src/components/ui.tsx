@@ -99,7 +99,11 @@ export function Sheet({
               setDirty(true);
           }}
           onClickCapture={(e) => {
-            if ((e.target as HTMLElement).closest("button[aria-pressed]"))
+            if (
+              (e.target as HTMLElement).closest(
+                'button[aria-pressed], button[role="checkbox"]',
+              )
+            )
               setDirty(true);
           }}
           className={`sheet ${wide ? "sheet-wide" : ""} ${className}`}

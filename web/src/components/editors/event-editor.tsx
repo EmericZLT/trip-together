@@ -11,6 +11,7 @@ import {
   resolveLocal,
   type Timing,
 } from "./event-time-fields";
+import { DocumentChoices } from "./document-choices";
 import { DocumentUpload } from "../files/document-manager";
 const kinds = {
   explore: "活动",
@@ -32,6 +33,7 @@ export function EventEditor({
   onClose: () => void;
   onSaved: (date?: string) => Promise<void>;
 }) {
+  const [step, setStep] = useState(event ? 2 : 1);
   const zone = event?.timezone ?? data.trip.timezone;
   const day = initialDate ?? data.trip.start_date;
   const [v, setV] = useState({
@@ -90,6 +92,10 @@ export function EventEditor({
   const suggested = transport && v.from && v.to ? `${v.from} → ${v.to}` : "";
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
     setError("");
     setBusy(true);
     try {
@@ -165,153 +171,180 @@ export function EventEditor({
       onClose={() => !busy && onClose()}
     >
       <form className="editor-form" onSubmit={save}>
-        <div className="event-type-picker" role="group" aria-label="事项类型">
-          {Object.entries(kinds).map(([kind, name]) => (
-            <button
-              key={kind}
-              type="button"
-              aria-pressed={v.kind === kind}
-              onClick={() => change("kind", kind)}
+        <p className="entry-step" aria-live="polite">
+          {step === 1
+            ? "1 / 2 · 选择事项类型"
+            : `2 / 2 · 填写${kinds[v.kind]}信息`}
+        </p>
+        {step === 1 ? (
+          <>
+            <div
+              className="event-type-picker"
+              role="group"
+              aria-label="事项类型"
             >
-              <EventIcon kind={kind as TripEvent["kind"]} size={21} />
-              {name}
+              {Object.entries(kinds).map(([kind, name]) => (
+                <button
+                  key={kind}
+                  type="button"
+                  aria-pressed={v.kind === kind}
+                  onClick={() => change("kind", kind)}
+                >
+                  <EventIcon kind={kind as TripEvent["kind"]} size={21} />
+                  {name}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => setStep(2)}
+            >
+              下一步
             </button>
-          ))}
-        </div>
-        {transport && (
-          <div className="form-grid">
-            <Field
-              label="出发地"
-              value={v.from}
-              required
-              onChange={(s) => change("from", s)}
-            />
-            <Field
-              label="目的地"
-              value={v.to}
-              required
-              onChange={(s) => change("to", s)}
-            />
-          </div>
-        )}
-        <Field
-          label={
-            stay ? "酒店名称" : transport ? "事项名称（选填）" : "活动名称"
-          }
-          value={v.title}
-          required={!transport}
-          maxLength={150}
-          placeholder={suggested || undefined}
-          onChange={(s) => change("title", s)}
-        />
-        <EventTimeFields v={timing} kind={v.kind} onChange={setTiming} />
-        <details className="optional-details">
-          <summary>更多信息（选填）</summary>
-          <div className="optional-fields">
-            {!stay && !transport && (
-              <Field
-                label="地点"
-                value={v.place}
-                onChange={(s) => change("place", s)}
-              />
+          </>
+        ) : (
+          <>
+            {transport && (
+              <div className="form-grid">
+                <Field
+                  label="出发地"
+                  value={v.from}
+                  required
+                  onChange={(s) => change("from", s)}
+                />
+                <Field
+                  label="目的地"
+                  value={v.to}
+                  required
+                  onChange={(s) => change("to", s)}
+                />
+              </div>
             )}
             <Field
-              label="详细地址"
-              value={v.address}
-              onChange={(s) => change("address", s)}
+              label={
+                stay ? "酒店名称" : transport ? "事项名称（选填）" : "活动名称"
+              }
+              value={v.title}
+              required={!transport}
+              maxLength={150}
+              placeholder={suggested || undefined}
+              onChange={(s) => change("title", s)}
             />
-            {(stay || transport) && (
-              <Field
-                label={v.kind === "flight" ? "航班号" : "预订编号"}
-                value={v.code}
-                onChange={(s) => change("code", s)}
-              />
-            )}
-            {stay && (
-              <Field
-                label="酒店电话"
-                type="tel"
-                value={v.phone}
-                onChange={(s) => change("phone", s)}
-              />
-            )}
-            <label>
-              说明
-              <textarea
-                aria-label="说明"
-                value={v.note}
-                maxLength={3000}
-                onChange={(e) => change("note", e.target.value)}
-              />
-            </label>
-            <label className="inline-check">
-              <input
-                type="checkbox"
-                checked={v.certainty === "confirmed"}
-                onChange={(e) =>
-                  change(
-                    "certainty",
-                    e.target.checked ? "confirmed" : "suggested",
-                  )
-                }
-              />
-              安排已确认
-            </label>
-          </div>
-        </details>
-        <div className="attachment-entry">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => setUploading(true)}
-          >
-            ＋{" "}
-            {stay
-              ? "添加住宿订单"
-              : v.kind === "flight"
-                ? "添加机票"
-                : "添加图片或文件"}
-          </button>
-          <small>选填，上传的资料会保留在旅行资料中。</small>
-        </div>
-        {docs.length > 0 && (
-          <details className="optional-details" open={documents.length > 0}>
-            <summary>
-              关联资料
-              {documents.length ? `（已选 ${documents.length} 份）` : ""}
-            </summary>
-            <div className="optional-fields">
-              {docs.map((d) => (
-                <label className="inline-check" key={d.id}>
+            <EventTimeFields v={timing} kind={v.kind} onChange={setTiming} />
+            <details className="optional-details">
+              <summary>更多信息（选填）</summary>
+              <div className="optional-fields">
+                {!stay && !transport && (
+                  <Field
+                    label="地点"
+                    value={v.place}
+                    onChange={(s) => change("place", s)}
+                  />
+                )}
+                <Field
+                  label="详细地址"
+                  value={v.address}
+                  onChange={(s) => change("address", s)}
+                />
+                {(stay || transport) && (
+                  <Field
+                    label={v.kind === "flight" ? "航班号" : "预订编号"}
+                    value={v.code}
+                    onChange={(s) => change("code", s)}
+                  />
+                )}
+                {stay && (
+                  <Field
+                    label="酒店电话"
+                    type="tel"
+                    value={v.phone}
+                    onChange={(s) => change("phone", s)}
+                  />
+                )}
+                <label>
+                  说明
+                  <textarea
+                    aria-label="说明"
+                    value={v.note}
+                    maxLength={3000}
+                    onChange={(e) => change("note", e.target.value)}
+                  />
+                </label>
+                <label className="inline-check">
                   <input
                     type="checkbox"
-                    checked={documents.includes(d.id)}
+                    checked={v.certainty === "confirmed"}
                     onChange={(e) =>
-                      setDocuments(
-                        e.target.checked
-                          ? [...documents, d.id]
-                          : documents.filter((id) => id !== d.id),
+                      change(
+                        "certainty",
+                        e.target.checked ? "confirmed" : "suggested",
                       )
                     }
                   />
-                  {d.name}
-                  {d.owner_id ? " · 仅自己" : ""}
+                  安排已确认
                 </label>
-              ))}
+              </div>
+            </details>
+            <div className="attachment-entry">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setUploading(true)}
+              >
+                ＋{" "}
+                {stay
+                  ? "添加住宿订单"
+                  : v.kind === "flight"
+                    ? "添加机票"
+                    : "添加图片或文件"}
+              </button>
+              <small>选填，上传的资料会保留在旅行资料中。</small>
             </div>
-          </details>
+            {docs.length > 0 && (
+              <details className="optional-details" open={documents.length > 0}>
+                <summary>
+                  关联资料
+                  {documents.length ? `（已选 ${documents.length} 份）` : ""}
+                </summary>
+                <DocumentChoices
+                  documents={docs}
+                  selected={documents}
+                  onChange={setDocuments}
+                />
+              </details>
+            )}
+            {error && (
+              <p role="alert" className="error-message">
+                {error}
+              </p>
+            )}
+            <div className="entry-step-actions sticky-save">
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={busy}
+                onClick={() => {
+                  setStep(1);
+                  setError("");
+                }}
+              >
+                上一步
+              </button>
+              <button className="primary-button" disabled={busy}>
+                {busy
+                  ? "正在保存…"
+                  : event
+                    ? "保存修改"
+                    : `添加${kinds[v.kind]}`}
+              </button>
+            </div>
+          </>
         )}
-        {error && (
-          <p role="alert" className="error-message">
-            {error}
-          </p>
-        )}
-        <button className="primary-button sticky-save" disabled={busy}>
-          {busy ? "正在保存…" : event ? "保存修改" : `添加${kinds[v.kind]}`}
-        </button>
       </form>
       {uploading && (
         <DocumentUpload
+          categories={docs.map((d) => d.category)}
           category={stay ? "住宿" : transport ? "交通" : "行程"}
           onClose={() => setUploading(false)}
           onUploaded={(docs) => {

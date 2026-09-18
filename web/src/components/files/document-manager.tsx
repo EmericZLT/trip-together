@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { TripDocument } from "@/lib/models";
 import { api, apiUrl } from "@/lib/api";
 import { uploadFile } from "@/lib/files/upload";
@@ -17,12 +17,15 @@ export function DocumentUpload({
   onSaved,
   onUploaded,
   category: initialCategory = "行程",
+  categories = [],
 }: {
   onClose: () => void;
   onSaved: () => Promise<void>;
   onUploaded?: (docs: TripDocument[]) => void;
   category?: string;
+  categories?: string[];
 }) {
+  const categoryId = useId();
   const [items, setItems] = useState<UploadItem[]>([]),
     [category, setCategory] = useState(initialCategory),
     [privateFile, setPrivate] = useState(false),
@@ -39,6 +42,10 @@ export function DocumentUpload({
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!category.trim()) {
+      setError("请选择或输入资料分类");
+      return;
+    }
     cancelled.current = false;
     setStarted(true);
     setBusy(true);
@@ -54,7 +61,7 @@ export function DocumentUpload({
       try {
         const task = uploadFile(
           apiUrl(
-            `/documents/${item.id}?category=${encodeURIComponent(category)}&private=${privateFile ? 1 : 0}`,
+            `/documents/${item.id}?category=${encodeURIComponent(category.trim())}&private=${privateFile ? 1 : 0}`,
           ),
           item.file,
           (progress) => update(item.id, { progress }),
@@ -96,27 +103,34 @@ export function DocumentUpload({
       onClose={() => !busy && onClose()}
     >
       <form className="editor-form" onSubmit={save}>
-        <div role="group" aria-label="谁可以查看" className="segmented-choice">
-          {[
-            [false, "同行成员可见"],
-            [true, "仅自己可见"],
-          ].map(([value, label]) => (
-            <button
-              type="button"
-              key={String(value)}
-              disabled={busy || locked}
-              aria-pressed={privateFile === value}
-              onClick={() => setPrivate(Boolean(value))}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <p className="muted">
-          {privateFile
-            ? "只有你能查看这些文件。"
-            : "当前行程的同行成员可以查看，请勿上传私人证件。"}
-        </p>
+        <label>
+          资料分类
+          <input
+            aria-label="资料分类"
+            required
+            maxLength={60}
+            list={categoryId}
+            value={category}
+            disabled={busy || locked}
+            placeholder="选择分类，或输入新分类"
+            onChange={(e) => setCategory(e.target.value)}
+          />
+          <datalist id={categoryId}>
+            {[
+              ...new Set([
+                "行程",
+                "交通",
+                "住宿",
+                "活动",
+                "其他",
+                ...categories,
+              ]),
+            ].map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+          <small>可以选择已有分类，也可以直接输入名称新建分类。</small>
+        </label>
         <label className="file-drop">
           ＋ 选择照片或文件
           <input
@@ -181,21 +195,35 @@ export function DocumentUpload({
             )}
           </div>
         ))}
-        <details className="optional-details">
-          <summary>分类：{category}</summary>
-          <label>
-            资料分类
-            <select
-              aria-label="资料分类"
-              disabled={busy || locked}
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {["行程", "交通", "住宿", "活动", "其他"].map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </label>
+        <details className="upload-visibility">
+          <summary>
+            可见范围：{privateFile ? "仅自己可见" : "同行成员可见"}
+          </summary>
+          <div
+            role="group"
+            aria-label="谁可以查看"
+            className="segmented-choice"
+          >
+            {[
+              [false, "同行成员可见"],
+              [true, "仅自己可见"],
+            ].map(([value, label]) => (
+              <button
+                type="button"
+                key={String(value)}
+                disabled={busy || locked}
+                aria-pressed={privateFile === value}
+                onClick={() => setPrivate(Boolean(value))}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="muted">
+            {privateFile
+              ? "只有你能查看这些文件。"
+              : "当前行程的同行成员可以查看，请勿上传私人证件。"}
+          </p>
         </details>
         {error && (
           <p role="alert" className="error-message">

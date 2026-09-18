@@ -35,6 +35,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   await page.getByRole("button", { name: "行程", exact: true }).click();
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
   await page.getByRole("button", { name: "航班", exact: true }).click();
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await page.getByLabel("事项名称（选填）", { exact: true }).fill("城市间航班");
   await page.getByLabel("出发地", { exact: true }).fill("出发机场");
   await page.getByLabel("目的地", { exact: true }).fill("到达机场");
@@ -54,8 +55,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
     mimeType: "image/png",
     buffer: png,
   });
-  await page.getByText("分类：行程", { exact: true }).click();
-  await page.getByLabel("资料分类", { exact: true }).selectOption("交通");
+  await page.getByLabel("资料分类", { exact: true }).fill("交通");
   await page
     .getByRole("button", { name: "上传 1 份资料", exact: true })
     .click();

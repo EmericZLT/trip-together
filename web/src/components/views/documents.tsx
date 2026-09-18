@@ -111,6 +111,7 @@ export function Documents({
       </div>
       {uploading && (
         <DocumentUpload
+          categories={documents.map((d) => d.category)}
           onClose={() => setUploading(false)}
           onSaved={onRefresh}
         />

@@ -341,3 +341,89 @@ button:focus-visible {
 .form-grid > label:only-child {
   grid-column: 1 / -1;
 }
+.entry-step {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+.entry-step-actions {
+  display: flex;
+  gap: 12px;
+  background: var(--paper);
+  padding-top: 8px;
+}
+.entry-step-actions .primary-button {
+  flex: 1;
+}
+.document-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 10px;
+  padding-top: 12px;
+}
+.document-choice {
+  min-width: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.document-choice-image {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #eeebf0;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.document-choice-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.document-choice[aria-checked="true"] .document-choice-image {
+  border-color: #9685b0;
+  box-shadow: 0 0 0 2px #e4dcee;
+}
+.document-choice-check {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #b7afbf;
+  border-radius: 50%;
+  background: #fff;
+}
+.document-choice[aria-checked="true"] .document-choice-check {
+  background: #786391;
+  color: white;
+  border-color: #786391;
+}
+.document-choice-name {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.upload-visibility {
+  font-size: 12px;
+  color: var(--muted);
+}
+.upload-visibility summary {
+  padding: 8px 0;
+  cursor: pointer;
+}
+.upload-visibility .segmented-choice {
+  margin: 8px 0;
+}
+.upload-visibility .segmented-choice button {
+  font-size: 12px;
+  padding: 8px;
+}
