@@ -11,7 +11,14 @@ import {
   AlertCircle,
 } from "lucide-react";
 import type { TripData, TripDocument, TripEvent } from "@/lib/models";
-import { localDate, dateLabel, clockTime, zoneName } from "@/lib/time";
+import {
+  localDate,
+  dateLabel,
+  clockTime,
+  zoneName,
+  eventTime,
+  eventEndDate,
+} from "@/lib/time";
 import { TravelSticker } from "../travel-sticker";
 import { EventIcon, Sheet, SectionTitle } from "../ui";
 import { PreparationChecklist } from "../preparation/checklist";
@@ -33,7 +40,22 @@ export function Itinerary({
 }) {
   const { events } = data;
   const [editing, setEditing] = useState(false);
-  const days = [...new Set(events.map((e) => localDate(e.start, e.timezone)))];
+  const tripDays: string[] = [];
+  for (
+    let day = data.trip.start_date;
+    day <= data.trip.end_date && tripDays.length < 730;
+  ) {
+    tripDays.push(day);
+    const next = new Date(`${day}T12:00:00Z`);
+    next.setUTCDate(next.getUTCDate() + 1);
+    day = next.toISOString().slice(0, 10);
+  }
+  const days = [
+    ...new Set([
+      ...tripDays,
+      ...events.map((e) => localDate(e.start, e.timezone)),
+    ]),
+  ].sort();
   const [selected, setSelected] = useState(
     now < Date.parse(events[0]?.start ?? data.trip.start_date)
       ? "preparation"
@@ -64,8 +86,14 @@ export function Itinerary({
       {editing && (
         <EventEditor
           data={data}
+          initialDate={
+            selected === "preparation" ? data.trip.start_date : selected
+          }
           onClose={() => setEditing(false)}
-          onSaved={onRefresh}
+          onSaved={async (date) => {
+            await onRefresh();
+            if (date) setSelected(date);
+          }}
         />
       )}
       <div className="day-picker" aria-label="选择行程日期">
@@ -108,6 +136,16 @@ export function Itinerary({
             <h2>{filtered[0]?.place}</h2>
             <span className="list-caption">{filtered.length} 项安排</span>
           </div>
+          {!filtered.length && (
+            <div className="surface empty-state">
+              <CalendarDays size={28} />
+              <h3>这一天还没有安排</h3>
+              <p>可以先添加活动名称，具体时间稍后完善。</p>
+              <button className="text-action" onClick={() => setEditing(true)}>
+                添加当天事项
+              </button>
+            </div>
+          )}
           <div className="timeline">
             {filtered.map((e) => (
               <button
@@ -116,7 +154,7 @@ export function Itinerary({
                 onClick={() => onEvent(e)}
               >
                 <div className="timeline-time">
-                  <strong>{clockTime(e.start, e.timezone)}</strong>
+                  <strong>{eventTime(e)}</strong>
                   <span>{e.certainty === "suggested" ? "建议" : "已确认"}</span>
                 </div>
                 <div className={`timeline-icon ${e.kind}`}>
@@ -181,15 +219,13 @@ export function EventDetail({
       <div className="event-detail">
         <span className="detail-kind">
           <EventIcon kind={event.kind} />
-          {event.certainty === "confirmed"
-            ? "凭证已确认"
-            : "建议安排 · 时间待确认"}
+          {event.certainty === "confirmed" ? "安排已确认" : "计划中"}
         </span>
         {event.from && (
           <div className="flight-route">
             <div>
               <strong>{event.from}</strong>
-              <span>{clockTime(event.start, event.timezone)}</span>
+              <span>{eventTime(event)}</span>
             </div>
             <div className="flight-line">
               <span>{event.code}</span>
@@ -197,9 +233,7 @@ export function EventDetail({
             </div>
             <div>
               <strong>{event.to}</strong>
-              <span>
-                {clockTime(event.end, event.endTimezone ?? event.timezone)}
-              </span>
+              <span>{eventTime(event, true)}</span>
             </div>
           </div>
         )}
@@ -208,19 +242,19 @@ export function EventDetail({
           <span>
             {dateLabel(event.start, event.timezone)}
             <small>
-              {clockTime(event.start, event.timezone)} ·{" "}
-              {zoneName(event.timezone)}
+              {eventTime(event)} · {zoneName(event.timezone)}
               {event.certainty === "suggested" ? "（建议时段）" : ""}
             </small>
           </span>
         </div>
-        {event.kind === "flight" && (
+        {(event.kind === "flight" || event.kind === "stay") && (
           <div className="detail-row">
             <Clock3 size={19} />
             <span>
-              抵达：{dateLabel(event.end, event.endTimezone ?? event.timezone)}
+              {event.kind === "stay" ? "退房：" : "抵达："}
+              {eventEndDate(event)}
               <small>
-                {clockTime(event.end, event.endTimezone ?? event.timezone)} ·{" "}
+                {eventTime(event, true)} ·{" "}
                 {zoneName(event.endTimezone ?? event.timezone)}
               </small>
             </span>
@@ -266,13 +300,13 @@ export function EventDetail({
         ) : (
           <div className="surface empty-state">
             <h3>尚未关联凭证</h3>
-            <p>上传旅行资料后，可以在修改事项时关联。</p>
+            <p>可以直接上传图片、订单或关联已有资料。</p>
             <button className="text-action" onClick={() => onEdit(event)}>
               关联凭证
             </button>
           </div>
         )}
-        <p className="source-note">资料来源：{event.source || "尚未填写"}</p>
+        <p className="source-note">资料来源：{event.source || "手动添加"}</p>
         <div className="form-actions">
           <button className="secondary-button" onClick={() => onEdit(event)}>
             修改事项

@@ -9,6 +9,7 @@ import {
 import type { TripData, TripEvent } from "@/lib/models";
 import {
   countdown,
+  eventTime,
   selectEvents,
   dateLabel,
   clockTime,
@@ -99,16 +100,13 @@ export function Today({
                   ) : (
                     <>
                       {dateLabel(featured.start, zone).split("星期")[0]} ·
-                      计划时间{" "}
-                      <strong>{clockTime(featured.start, zone)}</strong>
+                      计划时间 <strong>{eventTime(featured)}</strong>
                     </>
                   )}
                 </span>
                 <span>
                   {!route && `${zoneName(zone)} · `}
-                  {featured.certainty === "suggested"
-                    ? "建议时间 · 待确认"
-                    : "时间已确认"}
+                  {featured.certainty === "suggested" ? "计划中" : "安排已确认"}
                 </span>
               </div>
             </button>
@@ -118,11 +116,23 @@ export function Today({
             <div className="event-countdown-block">
               <span>
                 {preview ? "行程预览 · " : ""}
-                {current ? "距离本项结束" : "距离开始"}
+                {featured.timeMode === "date"
+                  ? "日期已安排"
+                  : featured.endUnspecified && Date.parse(featured.start) <= now
+                    ? "已到计划开始时间"
+                    : current
+                      ? "距离本项结束"
+                      : "距离开始"}
                 {featured.certainty === "suggested" ? "（建议时间）" : ""}
               </span>
               <span className="event-countdown" data-testid="event-countdown">
-                {countdown(current ? featured.end : featured.start, now)}
+                {featured.timeMode === "date"
+                  ? featured.kind === "stay"
+                    ? "入住时间待定"
+                    : "时间待定"
+                  : featured.endUnspecified && Date.parse(featured.start) <= now
+                    ? "结束时间待定"
+                    : countdown(current ? featured.end : featured.start, now)}
               </span>
             </div>
             <div className="ticket-bottom-row">
@@ -179,9 +189,11 @@ export function Today({
                   onClick={() => onEvent(e)}
                   className="agenda-row"
                 >
-                  <span>{clockTime(e.start, e.timezone)}</span>
+                  <span>{eventTime(e)}</span>
                   <div
                     className={
+                      e.timeMode !== "date" &&
+                      !e.endUnspecified &&
                       Date.parse(e.end) <= now
                         ? "agenda-dot done"
                         : "agenda-dot"

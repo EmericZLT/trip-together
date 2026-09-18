@@ -13,6 +13,7 @@ import type { Bootstrap } from "@/lib/models";
 import { api } from "@/lib/api";
 import { TripManagement } from "./management";
 import { TripForm } from "./trip-form";
+import { zoneName } from "@/lib/time";
 import { Sheet } from "../ui";
 export function TripList({
   data,
@@ -137,7 +138,7 @@ export function TripList({
                 {t.start_date} — {t.end_date}
               </span>
               <span className="trip-ticket-bottom">
-                {t.timezone.replaceAll("_", " ")}
+                {zoneName(t.timezone)}
                 <span>管理行程</span>
               </span>
             </button>
@@ -171,7 +172,7 @@ export function TripList({
             <label>
               邀请口令
               <input
-                maxLength={64}
+                maxLength={6}
                 autoCapitalize="characters"
                 spellCheck={false}
                 aria-label="邀请口令"
@@ -180,7 +181,7 @@ export function TripList({
                 autoComplete="off"
                 placeholder="输入 6 位字母口令"
                 onChange={(e) => {
-                  setToken(e.target.value);
+                  setToken(e.target.value.replace(/\s/g, "").toUpperCase());
                   setError("");
                 }}
               />

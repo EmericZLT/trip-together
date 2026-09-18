@@ -1,9 +1,13 @@
+import { currencyNames } from "../../../shared/travel-options";
 import type { Currency, Expense, Member } from "./models";
 export function money(cents: number, currency: Currency) {
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency,
     currencyDisplay: "narrowSymbol",
+    ...(cents % 100
+      ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      : {}),
   }).format(cents / 100);
 }
 export function splitAmount(amount: number, participants: string[]) {
@@ -35,8 +39,5 @@ export function summarize(
 }
 
 export function currencyLabel(currency: Currency) {
-  return (
-    new Intl.DisplayNames(["zh-CN"], { type: "currency" }).of(currency) ??
-    currency
-  );
+  return currencyNames[currency];
 }

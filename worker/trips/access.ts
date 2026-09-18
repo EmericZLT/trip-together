@@ -1,5 +1,6 @@
 import { HttpError } from "../http";
 export type Trip = {
+  destinations?: string;
   id: string;
   title: string;
   owner_id: string;

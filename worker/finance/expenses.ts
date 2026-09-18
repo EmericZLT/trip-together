@@ -16,7 +16,7 @@ const schema = z.object({
       "日期无效",
     ),
   participants: z.array(z.string()).min(1, "至少选择一位分摊成员").max(100),
-  note: z.string().trim().max(1000),
+  note: z.string().trim().max(1000).default(""),
   version: z.number().int().positive().optional(),
   receiptIds: z.array(z.string().uuid()).max(5).optional(),
 });

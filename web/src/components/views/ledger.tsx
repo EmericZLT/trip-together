@@ -94,12 +94,12 @@ export function Ledger({
               ]),
             ].map((c) => (
               <button
-                key={c}
+                key={currencyLabel(c)}
                 aria-pressed={currency === c}
                 className={c === currency ? "active" : ""}
                 onClick={() => setCurrency(c)}
               >
-                {c}
+                {currencyLabel(c)}
               </button>
             ))}
           </div>

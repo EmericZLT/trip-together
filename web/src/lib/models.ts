@@ -1,6 +1,8 @@
-export type Currency =
-  "CNY" | "NZD" | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "HKD";
+import type { Destination } from "../../../shared/travel-options";
+export type { Currency } from "../../../shared/travel-options";
+import type { Currency } from "../../../shared/travel-options";
 export type Trip = {
+  destinations?: Destination[];
   id: string;
   title: string;
   owner_id: string;
@@ -38,6 +40,9 @@ export type Profile = Member & {
   expiry: string;
 };
 export type TripEvent = {
+  dateEnd?: string;
+  timeMode?: "timed" | "date";
+  endUnspecified?: boolean;
   version: number;
   id: string;
   title: string;

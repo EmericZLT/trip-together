@@ -2,18 +2,12 @@
 import { MemberSelect } from "./members/member-select";
 import { Avatar } from "./avatar";
 import { useState } from "react";
-import {
-  LoaderCircle,
-  Check,
-  Trash2,
-  DollarSign,
-  JapaneseYen,
-  ArrowRightLeft,
-} from "lucide-react";
+import { LoaderCircle, Check, Trash2 } from "lucide-react";
 import type { Expense, TripData, Currency } from "@/lib/models";
 import { ReceiptPicker, useReceipts } from "./ledger/receipt-picker";
 import { localDate, selectEvents } from "@/lib/time";
-import { currencyLabel } from "@/lib/money";
+import { CurrencyField } from "./editors/fields";
+import { money, splitAmount } from "@/lib/money";
 import { api } from "@/lib/api";
 import { Sheet } from "./ui";
 export function ExpenseEditor({
@@ -134,27 +128,11 @@ export function ExpenseEditor({
               placeholder="0.00"
             />
           </label>
-          <button
-            type="button"
-            className="expense-currency"
-            disabled={busy || data.trip.home_currency === data.trip.currency}
-            aria-label={`当前${currencyLabel(currency)}，切换币种`}
-            title={`${currency} · 点击切换币种`}
-            onClick={() =>
-              setCurrency(
-                currency === data.trip.home_currency
-                  ? data.trip.currency
-                  : data.trip.home_currency,
-              )
-            }
-          >
-            <span style={{ fontSize: 14 }}>{currency}</span>
-            <ArrowRightLeft
-              className="currency-switch-icon"
-              size={11}
-              aria-hidden="true"
-            />
-          </button>
+          <CurrencyField
+            label="币种"
+            value={currency}
+            onChange={(v) => setCurrency(v as Currency)}
+          />
         </div>
         <label>
           支出名称
@@ -191,6 +169,22 @@ export function ExpenseEditor({
           <legend>
             分摊成员 <span>按人数均分</span>
           </legend>
+          <div className="form-actions">
+            <button
+              type="button"
+              className="text-action"
+              onClick={() => setParticipants(data.members.map((m) => m.id))}
+            >
+              全部成员
+            </button>
+            <button
+              type="button"
+              className="text-action"
+              onClick={() => setParticipants([data.me.id])}
+            >
+              仅自己
+            </button>
+          </div>
           <div className="participant-grid">
             {data.members.map((m) => (
               <button
@@ -209,10 +203,26 @@ export function ExpenseEditor({
               >
                 <Avatar member={m} />
                 <span>{m.name}</span>
+                {participants.includes(m.id) && Number(amount) > 0 && (
+                  <small>
+                    {money(
+                      splitAmount(
+                        Math.round(Number(amount) * 100),
+                        participants,
+                      )[m.id],
+                      currency,
+                    )}
+                  </small>
+                )}
                 {participants.includes(m.id) && <Check size={15} />}
               </button>
             ))}
           </div>
+          <p className="muted">
+            {participants.length
+              ? `共 ${participants.length} 人分摊，按实际金额平均分配。`
+              : "请选择至少一位分摊成员。"}
+          </p>
         </fieldset>
         <ReceiptPicker receipts={receipts} disabled={busy} onError={setError} />
         {error && (

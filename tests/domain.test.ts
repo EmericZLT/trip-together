@@ -49,3 +49,27 @@ test("跨时区输入和夏令时缺失、重复时刻", () => {
     "2030-11-03T06:30:00.000Z",
   );
 });
+test("日期事项不产生虚假倒计时或提前结束，未知结束时间保留当天安排", () => {
+  const dated = {
+    ...eventInput,
+    id: "date",
+    version: 1,
+    kind: "explore",
+    timeMode: "date",
+    start: "2030-06-01T00:00:00+08:00",
+    end: "2030-06-02T00:00:00+08:00",
+  } as TripEvent;
+  const noon = Date.parse("2030-06-01T12:00:00+08:00");
+  assert.equal(selectEvents([dated], noon).current, undefined);
+  assert.equal(selectEvents([dated], noon).featured?.id, "date");
+  assert.equal(selectEvents([dated], noon).finished, false);
+  assert.equal(selectEvents([dated], Date.parse(dated.end)).finished, true);
+  const partial = {
+    ...dated,
+    timeMode: "timed",
+    endUnspecified: true,
+    end: "2030-06-01T00:00:00.001+08:00",
+  } as TripEvent;
+  assert.equal(selectEvents([partial], noon).featured?.id, "date");
+  assert.equal(selectEvents([partial], noon).current, undefined);
+});

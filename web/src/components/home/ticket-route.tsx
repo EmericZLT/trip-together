@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import type { TripEvent } from "@/lib/models";
 import { eventRoute } from "@/lib/event-route";
-import { clockTime, dateLabel, zoneName } from "@/lib/time";
+import { eventTime, eventEndDate, dateLabel, zoneName } from "@/lib/time";
 import { TravelSticker } from "../travel-sticker";
 
 export function TicketRoute({ event }: { event: TripEvent }) {
@@ -18,7 +18,7 @@ export function TicketRoute({ event }: { event: TripEvent }) {
           {route.from.code && " · "}
           {route.from.detail}
         </span>
-        <time>{clockTime(event.start, event.timezone)}</time>
+        <time>{eventTime(event)}</time>
         <small>
           {dateLabel(event.start, event.timezone).split("星期")[0]} ·{" "}
           {zoneName(event.timezone)}
@@ -36,9 +36,9 @@ export function TicketRoute({ event }: { event: TripEvent }) {
           {route.to.code && " · "}
           {route.to.detail}
         </span>
-        <time>{clockTime(event.end, endZone)}</time>
+        <time>{eventTime(event, true)}</time>
         <small>
-          {dateLabel(event.end, endZone).split("星期")[0]} · {zoneName(endZone)}
+          {eventEndDate(event).split("星期")[0]} · {zoneName(endZone)}
         </small>
       </div>
     </div>

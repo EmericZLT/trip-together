@@ -99,7 +99,7 @@ export function PersonalDocuments({
             e.target.value = "";
             if (!file) return;
             try {
-              validateFiles([file]);
+              validateFiles([file], true);
               if (draft) URL.revokeObjectURL(draft.url);
               void upload({
                 id: `personal-${crypto.randomUUID()}`,
@@ -117,7 +117,7 @@ export function PersonalDocuments({
         <div className="document-row personal-add-row">
           <button
             className="document-main"
-            aria-label="添加证件照片"
+            aria-label="添加证件或文件"
             disabled={busy}
             onClick={() => input.current?.click()}
           >
@@ -125,7 +125,7 @@ export function PersonalDocuments({
               <Plus size={22} strokeWidth={1.5} />
             </span>
             <span>
-              <strong>添加证件照片</strong>
+              <strong>添加证件或文件</strong>
               <small>图片 / PDF · 每份 ≤10 MB</small>
             </span>
             <ChevronRight size={17} />

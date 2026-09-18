@@ -1,28 +1,12 @@
 "use client";
-export const currencyOptions = [
-  "CNY",
-  "NZD",
-  "USD",
-  "EUR",
-  "GBP",
-  "AUD",
-  "CAD",
-  "SGD",
-  "HKD",
-];
-export const timezones = [
-  "Asia/Shanghai",
-  "Pacific/Auckland",
-  "Asia/Tokyo",
-  "Asia/Singapore",
-  "Asia/Hong_Kong",
-  "Australia/Sydney",
-  "Europe/London",
-  "Europe/Paris",
-  "America/New_York",
-  "America/Los_Angeles",
-  "UTC",
-];
+import {
+  currencies,
+  currencyNames,
+  destinations,
+  readableZone,
+} from "../../../../shared/travel-options";
+import { useId, useState } from "react";
+import { ChoiceField } from "./choice-field";
 export function Field({
   label,
   value,
@@ -30,6 +14,8 @@ export function Field({
   type = "text",
   required = false,
   maxLength = 500,
+  min,
+  placeholder,
 }: {
   label: string;
   value: string;
@@ -37,7 +23,11 @@ export function Field({
   type?: string;
   required?: boolean;
   maxLength?: number;
+  min?: string;
+  placeholder?: string;
 }) {
+  const id = useId();
+  const [error, setError] = useState("");
   return (
     <label>
       {label}
@@ -47,8 +37,29 @@ export function Field({
         value={value}
         required={required}
         maxLength={maxLength}
-        onChange={(e) => onChange(e.target.value)}
+        min={min}
+        placeholder={placeholder}
+        aria-invalid={!!error}
+        aria-describedby={error ? id : undefined}
+        onInvalid={(e) => {
+          const input = e.currentTarget;
+          const message = input.validity.rangeUnderflow
+            ? `${label}不能早于 ${min}`
+            : `请填写有效的${label}`;
+          input.setCustomValidity(message);
+          setError(message);
+        }}
+        onChange={(e) => {
+          e.target.setCustomValidity("");
+          setError("");
+          onChange(e.target.value);
+        }}
       />
+      {error && (
+        <small id={id} className="error-message" role="alert">
+          {error}
+        </small>
+      )}
     </label>
   );
 }
@@ -61,22 +72,25 @@ export function ZoneField({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const zones = [
+    ...new Set([
+      ...destinations.map((d) => d.timezone),
+      value,
+      "UTC",
+      ...Intl.supportedValuesOf("timeZone"),
+    ]),
+  ];
   return (
-    <label>
-      {label}
-      <input
-        aria-label={label}
-        list="timezones"
-        value={value}
-        required
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <datalist id="timezones">
-        {timezones.map((z) => (
-          <option key={z} value={z} />
-        ))}
-      </datalist>
-    </label>
+    <ChoiceField
+      label={label}
+      value={value}
+      onChange={onChange}
+      options={zones.map((z) => ({
+        value: z,
+        label: readableZone(z),
+        search: z,
+      }))}
+    />
   );
 }
 export function CurrencyField({
@@ -89,17 +103,15 @@ export function CurrencyField({
   onChange: (v: string) => void;
 }) {
   return (
-    <label>
-      {label}
-      <select
-        aria-label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {currencyOptions.map((c) => (
-          <option key={c}>{c}</option>
-        ))}
-      </select>
-    </label>
+    <ChoiceField
+      label={label}
+      value={value}
+      onChange={onChange}
+      options={currencies.map((c) => ({
+        value: c,
+        label: currencyNames[c],
+        search: c,
+      }))}
+    />
   );
 }

@@ -18,27 +18,29 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   await expect(page.getByRole("heading", { name: "还没有行程" })).toBeVisible();
   await page.getByRole("button", { name: "前往我的行程" }).click();
   await page.getByRole("button", { name: /创建行程/ }).click();
-  await page.getByLabel("行程名称", { exact: true }).fill("周末城市旅行");
-  await page.getByLabel("开始日期", { exact: true }).fill("2030-06-01");
-  await page.getByLabel("结束日期", { exact: true }).fill("2030-06-10");
-  await page.getByLabel("目的地时区", { exact: true }).fill("Europe/Paris");
-  await page.getByLabel("常用时区", { exact: true }).fill("Asia/Shanghai");
-  await page.getByLabel("目的地币种", { exact: true }).selectOption("EUR");
-  await page.getByRole("button", { name: "保存行程" }).click();
+  await page
+    .getByLabel("行程名称（选填）", { exact: true })
+    .fill("周末城市旅行");
+  await page.getByLabel("出发日期", { exact: true }).fill("2030-06-01");
+  await page.getByLabel("返回日期", { exact: true }).fill("2030-06-10");
+  await page.getByRole("button", { name: "目的地", exact: true }).click();
+  await page.getByRole("button", { name: "巴黎 · 法国", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "创建行程", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "还没有行程事项" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "行程", exact: true }).click();
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
-  await page.getByLabel("事项名称", { exact: true }).fill("城市间航班");
-  await page.getByLabel("事项类型", { exact: true }).selectOption("flight");
-  await page.getByLabel("起点", { exact: true }).fill("出发机场");
-  await page.getByLabel("终点", { exact: true }).fill("到达机场");
-  await page.getByLabel("资料来源", { exact: true }).fill("用户提供的预订资料");
-  await page
-    .getByLabel("事项提醒", { exact: true })
-    .fill("提前到达机场办理登机");
-  await page.getByRole("button", { name: "保存事项" }).click();
+  await page.getByRole("button", { name: "航班", exact: true }).click();
+  await page.getByLabel("事项名称（选填）", { exact: true }).fill("城市间航班");
+  await page.getByLabel("出发地", { exact: true }).fill("出发机场");
+  await page.getByLabel("目的地", { exact: true }).fill("到达机场");
+  await page.getByText("更多信息（选填）", { exact: true }).click();
+  await page.getByLabel("说明", { exact: true }).fill("提前到达机场办理登机");
+  await page.getByRole("button", { name: "添加航班", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "现在", exact: true }).click();
   await expect(page.getByRole("heading", { name: "城市间航班" })).toBeVisible();
@@ -47,13 +49,16 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "资料", exact: true }).click();
   await page.getByRole("button", { name: "上传旅行资料", exact: true }).click();
-  await page.getByLabel("文件", { exact: true }).setInputFiles({
+  await page.getByLabel("选择照片或文件", { exact: true }).setInputFiles({
     name: "测试机票.png",
     mimeType: "image/png",
     buffer: png,
   });
-  await page.getByLabel("分类", { exact: true }).fill("交通");
-  await page.getByRole("button", { name: "上传资料", exact: true }).click();
+  await page.getByText("分类：行程", { exact: true }).click();
+  await page.getByLabel("资料分类", { exact: true }).selectOption("交通");
+  await page
+    .getByRole("button", { name: "上传 1 份资料", exact: true })
+    .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "查看测试机票.png", exact: true }),
@@ -64,13 +69,18 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
     .getByRole("button", { name: /城市间航班.*查看详情与凭证/ })
     .click();
   await page.getByRole("button", { name: "修改事项", exact: true }).click();
+  await page.getByText("关联资料", { exact: true }).click();
   await page.getByLabel("测试机票.png", { exact: true }).check();
-  await page.getByRole("button", { name: "保存事项" }).click();
+  await page.getByRole("button", { name: "保存修改" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: /准备清单.*出发前/ }).click();
   await page.getByRole("button", { name: "添加准备事项" }).click();
   await page.getByLabel("准备事项", { exact: true }).fill("携带雨伞");
-  await page.getByRole("button", { name: "保存准备事项" }).click();
+  await page.getByLabel("保存后继续添加").uncheck();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "添加准备事项", exact: true })
+    .click();
   await page.getByRole("checkbox", { name: "携带雨伞" }).click();
   await expect(page.getByRole("checkbox", { name: "携带雨伞" })).toBeChecked();
   await page.getByRole("button", { name: "账本", exact: true }).click();
@@ -87,7 +97,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "保存支出", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "EUR", exact: true }).click();
+  await page.getByRole("button", { name: "欧元", exact: true }).click();
   await expect(page.getByText("午餐", { exact: true })).toBeVisible();
   await page.getByText("午餐", { exact: true }).click();
   await expect(
@@ -105,6 +115,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   await page.getByRole("button", { name: "关闭", exact: true }).click();
   await page.getByRole("button", { name: "我的", exact: true }).click();
   await page.getByRole("button", { name: "编辑个人资料" }).click();
+  await page.getByText("证件信息（选填，仅自己可见）", { exact: true }).click();
   await page.getByLabel("英文姓名", { exact: true }).fill("Test Traveller");
   await page.getByLabel("护照号码", { exact: true }).fill("TEST-DOCUMENT");
   await page.getByRole("button", { name: "保存个人资料" }).click();

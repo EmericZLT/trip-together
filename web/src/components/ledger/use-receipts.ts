@@ -44,7 +44,7 @@ export function useReceipts(existing: Receipt[]) {
   function add(selected: File[]) {
     if (items.current.length + selected.length > 5)
       throw new Error("最多上传 5 份凭证");
-    validateFiles(selected);
+    validateFiles(selected, true);
     const added = selected.map((file) => {
       const url = URL.createObjectURL(file);
       urls.current.add(url);

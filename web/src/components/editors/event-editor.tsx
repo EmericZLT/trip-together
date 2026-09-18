@@ -1,66 +1,152 @@
 "use client";
 import { useState } from "react";
-import type { TripData, TripEvent } from "@/lib/models";
+import type { TripData, TripEvent, TripDocument } from "@/lib/models";
 import { api } from "@/lib/api";
-import { localInput, zonedInstant } from "@/lib/zoned-input";
-import { Sheet } from "../ui";
-import { Field, ZoneField } from "./fields";
+import { localInput, zonedChoices } from "@/lib/zoned-input";
+import { localDate } from "@/lib/time";
+import { Sheet, EventIcon } from "../ui";
+import { Field } from "./fields";
+import {
+  EventTimeFields,
+  resolveLocal,
+  type Timing,
+} from "./event-time-fields";
+import { DocumentUpload } from "../files/document-manager";
+const kinds = {
+  explore: "活动",
+  flight: "航班",
+  stay: "住宿",
+  drive: "自驾",
+  transfer: "交通",
+} as const;
 export function EventEditor({
   event,
   data,
+  initialDate,
   onClose,
   onSaved,
 }: {
   event?: TripEvent;
   data: TripData;
+  initialDate?: string;
   onClose: () => void;
-  onSaved: () => Promise<void>;
+  onSaved: (date?: string) => Promise<void>;
 }) {
-  const initialZone = event?.timezone ?? data.trip.timezone;
+  const zone = event?.timezone ?? data.trip.timezone;
+  const day = initialDate ?? data.trip.start_date;
   const [v, setV] = useState({
     title: event?.title ?? "",
     subtitle: event?.subtitle ?? "",
     kind: event?.kind ?? "explore",
-    start: event
-      ? localInput(event.start, initialZone)
-      : `${data.trip.start_date}T09:00`,
-    end: event
-      ? localInput(event.end, event.endTimezone ?? initialZone)
-      : `${data.trip.start_date}T10:00`,
-    timezone: initialZone,
-    endTimezone: event?.endTimezone ?? initialZone,
     certainty: event?.certainty ?? "suggested",
     place: event?.place ?? "",
     address: event?.address ?? "",
     phone: event?.phone ?? "",
-    source: event?.source ?? "",
     note: event?.note ?? "",
     from: event?.from ?? "",
     to: event?.to ?? "",
     code: event?.code ?? "",
-    startOffset: "",
-    endOffset: "",
+  });
+  const [timing, setTiming] = useState<Timing>({
+    date: event ? localDate(event.start, zone) : day,
+    endDate: event
+      ? (event.dateEnd ?? localDate(event.end, event.endTimezone ?? zone))
+      : day,
+    startTime:
+      event && event.timeMode !== "date"
+        ? localInput(event.start, zone).slice(11)
+        : "",
+    endTime:
+      event && event.timeMode !== "date" && !event.endUnspecified
+        ? localInput(event.end, event.endTimezone ?? zone).slice(11)
+        : "",
+    timezone: zone,
+    endTimezone: event?.endTimezone ?? zone,
+    timeMode: event?.timeMode ?? (event ? "timed" : "date"),
+    firstChoice: event
+      ? String(
+          zonedChoices(localInput(event.start, zone), zone).findIndex(
+            (x) => Date.parse(x) === Date.parse(event.start),
+          ),
+        )
+      : "",
+    lastChoice: event
+      ? String(
+          zonedChoices(
+            localInput(event.end, event.endTimezone ?? zone),
+            event.endTimezone ?? zone,
+          ).findIndex((x) => Date.parse(x) === Date.parse(event.end)),
+        )
+      : "",
   });
   const [documents, setDocuments] = useState(event?.documents ?? []),
+    [uploaded, setUploaded] = useState<TripDocument[]>([]),
+    [uploading, setUploading] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const change = (key: string, value: string) => setV({ ...v, [key]: value });
+  const transport = ["flight", "drive", "transfer"].includes(v.kind),
+    stay = v.kind === "stay";
+  const suggested = transport && v.from && v.to ? `${v.from} → ${v.to}` : "";
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
     setError("");
+    setBusy(true);
     try {
+      const start = resolveLocal(
+        `${timing.date}T${timing.timeMode === "date" ? "00:00" : timing.startTime}`,
+        timing.timezone,
+        timing.firstChoice,
+      );
+      const endUnspecified = timing.timeMode === "timed" && !timing.endTime;
+      let end: string;
+      if (timing.timeMode === "date") {
+        const endDay =
+          stay || v.kind === "flight" ? timing.endDate : timing.date;
+        const date = new Date(`${endDay}T12:00:00Z`);
+        if (!stay) date.setUTCDate(date.getUTCDate() + 1);
+        end = resolveLocal(
+          `${date.toISOString().slice(0, 10)}T00:00`,
+          timing.endTimezone,
+          "0",
+        );
+      } else
+        end = endUnspecified
+          ? new Date(Date.parse(start) + 1).toISOString()
+          : resolveLocal(
+              `${timing.endDate}T${timing.endTime}`,
+              timing.endTimezone,
+              timing.lastChoice,
+            );
+      if (Date.parse(end) <= Date.parse(start))
+        throw new Error(
+          stay
+            ? "退房日期或时间需要晚于入住"
+            : "结束时间需要晚于开始，请检查日期与当地时间",
+        );
       await api(`/events${event ? `/${event.id}` : ""}`, {
         method: event ? "PUT" : "POST",
         body: JSON.stringify({
           ...v,
-          start: zonedInstant(v.start, v.timezone, v.startOffset),
-          end: zonedInstant(v.end, v.endTimezone, v.endOffset),
+          from: transport ? v.from : "",
+          to: transport ? v.to : "",
+          code: transport || stay ? v.code : "",
+          phone: stay ? v.phone : "",
+          title: v.title.trim() || suggested,
+          place: stay ? v.title : v.place,
+          start,
+          end,
+          timeMode: timing.timeMode,
+          dateEnd: timing.endDate,
+          endUnspecified,
+          timezone: timing.timezone,
+          endTimezone: timing.endTimezone,
+          source: event?.source || "手动添加",
           documents,
           version: event?.version,
         }),
       });
-      await onSaved();
+      await onSaved(timing.date);
       onClose();
     } catch (e) {
       setError((e as Error).message);
@@ -68,6 +154,10 @@ export function EventEditor({
       setBusy(false);
     }
   }
+  const docs = [
+    ...data.documents.filter((d) => d.trip_id === data.trip.id),
+    ...uploaded,
+  ].filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i);
   return (
     <Sheet
       open
@@ -75,165 +165,164 @@ export function EventEditor({
       onClose={() => !busy && onClose()}
     >
       <form className="editor-form" onSubmit={save}>
+        <div className="event-type-picker" role="group" aria-label="事项类型">
+          {Object.entries(kinds).map(([kind, name]) => (
+            <button
+              key={kind}
+              type="button"
+              aria-pressed={v.kind === kind}
+              onClick={() => change("kind", kind)}
+            >
+              <EventIcon kind={kind as TripEvent["kind"]} size={21} />
+              {name}
+            </button>
+          ))}
+        </div>
+        {transport && (
+          <div className="form-grid">
+            <Field
+              label="出发地"
+              value={v.from}
+              required
+              onChange={(s) => change("from", s)}
+            />
+            <Field
+              label="目的地"
+              value={v.to}
+              required
+              onChange={(s) => change("to", s)}
+            />
+          </div>
+        )}
         <Field
-          label="事项名称"
+          label={
+            stay ? "酒店名称" : transport ? "事项名称（选填）" : "活动名称"
+          }
           value={v.title}
-          required
+          required={!transport}
           maxLength={150}
-          onChange={(x) => change("title", x)}
+          placeholder={suggested || undefined}
+          onChange={(s) => change("title", s)}
         />
-        <Field
-          label="简要说明"
-          value={v.subtitle}
-          maxLength={250}
-          onChange={(x) => change("subtitle", x)}
-        />
-        <div className="form-grid">
-          <label>
-            事项类型
-            <select
-              aria-label="事项类型"
-              value={v.kind}
-              onChange={(e) => change("kind", e.target.value)}
-            >
-              {Object.entries({
-                flight: "航班",
-                drive: "自驾",
-                stay: "住宿",
-                explore: "活动",
-                transfer: "接驳 / 转机",
-              }).map(([id, title]) => (
-                <option key={id} value={id}>
-                  {title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            确认状态
-            <select
-              aria-label="确认状态"
-              value={v.certainty}
-              onChange={(e) => change("certainty", e.target.value)}
-            >
-              <option value="suggested">待确认 / 建议</option>
-              <option value="confirmed">已确认</option>
-            </select>
-          </label>
-        </div>
-        <ZoneField
-          label="开始地点时区"
-          value={v.timezone}
-          onChange={(x) => change("timezone", x)}
-        />
-        <Field
-          label="开始当地时间"
-          type="datetime-local"
-          required
-          value={v.start}
-          onChange={(x) => change("start", x)}
-        />
-        <ZoneField
-          label="结束地点时区"
-          value={v.endTimezone}
-          onChange={(x) => change("endTimezone", x)}
-        />
-        <Field
-          label="结束当地时间"
-          type="datetime-local"
-          required
-          value={v.end}
-          onChange={(x) => change("end", x)}
-        />
-        <details>
-          <summary>夏令时重复时间设置</summary>
-          <p className="muted">
-            仅当地时间因夏令时回拨出现两次时填写，例如 +12:00。
-          </p>
-          <Field
-            label="开始 UTC 偏移"
-            value={v.startOffset}
-            onChange={(x) => change("startOffset", x)}
-          />
-          <Field
-            label="结束 UTC 偏移"
-            value={v.endOffset}
-            onChange={(x) => change("endOffset", x)}
-          />
+        <EventTimeFields v={timing} kind={v.kind} onChange={setTiming} />
+        <details className="optional-details">
+          <summary>更多信息（选填）</summary>
+          <div className="optional-fields">
+            {!stay && !transport && (
+              <Field
+                label="地点"
+                value={v.place}
+                onChange={(s) => change("place", s)}
+              />
+            )}
+            <Field
+              label="详细地址"
+              value={v.address}
+              onChange={(s) => change("address", s)}
+            />
+            {(stay || transport) && (
+              <Field
+                label={v.kind === "flight" ? "航班号" : "预订编号"}
+                value={v.code}
+                onChange={(s) => change("code", s)}
+              />
+            )}
+            {stay && (
+              <Field
+                label="酒店电话"
+                type="tel"
+                value={v.phone}
+                onChange={(s) => change("phone", s)}
+              />
+            )}
+            <label>
+              说明
+              <textarea
+                aria-label="说明"
+                value={v.note}
+                maxLength={3000}
+                onChange={(e) => change("note", e.target.value)}
+              />
+            </label>
+            <label className="inline-check">
+              <input
+                type="checkbox"
+                checked={v.certainty === "confirmed"}
+                onChange={(e) =>
+                  change(
+                    "certainty",
+                    e.target.checked ? "confirmed" : "suggested",
+                  )
+                }
+              />
+              安排已确认
+            </label>
+          </div>
         </details>
-        <div className="form-grid">
-          <Field
-            label="起点"
-            value={v.from}
-            onChange={(x) => change("from", x)}
-          />
-          <Field label="终点" value={v.to} onChange={(x) => change("to", x)} />
+        <div className="attachment-entry">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setUploading(true)}
+          >
+            ＋{" "}
+            {stay
+              ? "添加住宿订单"
+              : v.kind === "flight"
+                ? "添加机票"
+                : "添加图片或文件"}
+          </button>
+          <small>选填，上传的资料会保留在旅行资料中。</small>
         </div>
-        <Field
-          label="航班号 / 预订编号"
-          value={v.code}
-          onChange={(x) => change("code", x)}
-        />
-        <Field
-          label="地点"
-          value={v.place}
-          onChange={(x) => change("place", x)}
-        />
-        <Field
-          label="详细地址"
-          value={v.address}
-          onChange={(x) => change("address", x)}
-        />
-        <Field
-          label="联系电话"
-          type="tel"
-          value={v.phone}
-          onChange={(x) => change("phone", x)}
-        />
-        <Field
-          label="资料来源"
-          value={v.source}
-          onChange={(x) => change("source", x)}
-        />
-        <label>
-          事项提醒
-          <textarea
-            value={v.note}
-            maxLength={3000}
-            onChange={(e) => change("note", e.target.value)}
-          />
-        </label>
-        <fieldset>
-          <legend>关联资料</legend>
-          {data.documents
-            .filter((d) => d.trip_id === data.trip.id)
-            .map((d) => (
-              <label className="inline-check" key={d.id}>
-                <input
-                  type="checkbox"
-                  checked={documents.includes(d.id)}
-                  onChange={(e) =>
-                    setDocuments(
-                      e.target.checked
-                        ? [...documents, d.id]
-                        : documents.filter((id) => id !== d.id),
-                    )
-                  }
-                />
-                {d.name}
-              </label>
-            ))}
-          <small>共享文件供同行成员查看，本人专属文件仅本人可以查看。</small>
-        </fieldset>
+        {docs.length > 0 && (
+          <details className="optional-details" open={documents.length > 0}>
+            <summary>
+              关联资料
+              {documents.length ? `（已选 ${documents.length} 份）` : ""}
+            </summary>
+            <div className="optional-fields">
+              {docs.map((d) => (
+                <label className="inline-check" key={d.id}>
+                  <input
+                    type="checkbox"
+                    checked={documents.includes(d.id)}
+                    onChange={(e) =>
+                      setDocuments(
+                        e.target.checked
+                          ? [...documents, d.id]
+                          : documents.filter((id) => id !== d.id),
+                      )
+                    }
+                  />
+                  {d.name}
+                  {d.owner_id ? " · 仅自己" : ""}
+                </label>
+              ))}
+            </div>
+          </details>
+        )}
         {error && (
           <p role="alert" className="error-message">
             {error}
           </p>
         )}
         <button className="primary-button sticky-save" disabled={busy}>
-          {busy ? "正在保存…" : "保存事项"}
+          {busy ? "正在保存…" : event ? "保存修改" : `添加${kinds[v.kind]}`}
         </button>
       </form>
+      {uploading && (
+        <DocumentUpload
+          category={stay ? "住宿" : transport ? "交通" : "行程"}
+          onClose={() => setUploading(false)}
+          onUploaded={(docs) => {
+            setUploaded((prev) => [...prev, ...docs]);
+            setDocuments((prev) => [
+              ...new Set([...prev, ...docs.map((d) => d.id)]),
+            ]);
+          }}
+          onSaved={async () => {}}
+        />
+      )}
     </Sheet>
   );
 }

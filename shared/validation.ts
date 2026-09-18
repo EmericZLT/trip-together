@@ -1,15 +1,6 @@
 import { z } from "zod";
-export const currencies = [
-  "CNY",
-  "NZD",
-  "USD",
-  "EUR",
-  "GBP",
-  "AUD",
-  "CAD",
-  "SGD",
-  "HKD",
-] as const;
+import { currencies } from "./travel-options";
+export { currencies } from "./travel-options";
 export const currencySchema = z.enum(currencies);
 export const dateSchema = z
   .string()
@@ -29,10 +20,20 @@ export const zoneSchema = z
     } catch {
       return false;
     }
-  }, "请输入有效的 IANA 时区");
+  }, "请选择有效的当地时间");
 export const tripSchema = z
   .object({
     title: z.string().trim().min(1).max(100),
+    destinations: z
+      .array(
+        z.object({
+          name: z.string().trim().min(1).max(100),
+          timezone: zoneSchema,
+          currency: currencySchema,
+        }),
+      )
+      .max(20)
+      .default([]),
     start_date: dateSchema,
     end_date: dateSchema,
     timezone: zoneSchema,
@@ -47,6 +48,9 @@ export const eventSchema = z
     title: z.string().trim().min(1).max(150),
     subtitle: z.string().max(250).default(""),
     kind: z.enum(["flight", "drive", "stay", "explore", "transfer"]),
+    dateEnd: dateSchema.optional(),
+    timeMode: z.enum(["timed", "date"]).default("timed"),
+    endUnspecified: z.boolean().default(false),
     start: z.iso.datetime({ offset: true }),
     end: z.iso.datetime({ offset: true }),
     timezone: zoneSchema,

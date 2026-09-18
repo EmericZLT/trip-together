@@ -7,7 +7,7 @@ import {
   Info,
 } from "lucide-react";
 import type { TripEvent } from "@/lib/models";
-import { dateLabel, clockTime } from "@/lib/time";
+import { dateLabel, eventTime } from "@/lib/time";
 export function EventExtras({
   event,
   events,
@@ -70,7 +70,7 @@ export function EventExtras({
             </small>
             <strong>{stay.title}</strong>
             <small>
-              {clockTime(stay.start, stay.timezone)} ·{" "}
+              {eventTime(stay)} ·{" "}
               {stay.certainty === "suggested" ? "建议入住时间" : "计划入住时间"}
             </small>
           </span>

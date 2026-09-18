@@ -11,7 +11,7 @@ export function localInput(instant: string, zone: string) {
   const get = (type: string) => parts.find((p) => p.type === type)?.value;
   return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
 }
-export function zonedInstant(value: string, zone: string, offsetHint = "") {
+export function zonedChoices(value: string, zone: string, offsetHint = "") {
   const base = Date.parse(`${value}:00Z`);
   if (!Number.isFinite(base)) throw new Error("请填写完整日期和时间");
   const matches: string[] = [];
@@ -24,10 +24,13 @@ export function zonedInstant(value: string, zone: string, offsetHint = "") {
     }
   }
   if (!matches.length)
-    throw new Error(
-      "该当地时间不存在，或 UTC 偏移与时区不符，请检查夏令时与日期",
-    );
+    throw new Error("这个时间因当地调整时钟而不存在，请选择其他时间");
+  return matches;
+}
+
+export function zonedInstant(value: string, zone: string, offsetHint = "") {
+  const matches = zonedChoices(value, zone, offsetHint);
   if (matches.length > 1)
-    throw new Error("该时间因夏令时回拨出现两次，请填写 UTC 偏移以确定时间");
+    throw new Error("当地时钟回拨，这个时间出现两次，请选择第一次或第二次");
   return matches[0];
 }

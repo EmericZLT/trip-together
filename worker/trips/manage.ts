@@ -18,7 +18,14 @@ export async function bootstrap(env: Env, id: string) {
       .bind(id)
       .all(),
   ]);
-  return json({ me, trips: trips.results, documents: documents.results });
+  return json({
+    me,
+    trips: trips.results.map((t) => ({
+      ...t,
+      destinations: JSON.parse(String(t.destinations ?? "[]")),
+    })),
+    documents: documents.results,
+  });
 }
 export async function createTrip(request: Request, env: Env, memberId: string) {
   await rateLimit(request, env, "create-trip", 30);
@@ -26,7 +33,7 @@ export async function createTrip(request: Request, env: Env, memberId: string) {
     id = crypto.randomUUID();
   await env.DB.batch([
     env.DB.prepare(
-      "INSERT INTO trips (id,title,owner_id,start_date,end_date,timezone,home_timezone,currency,home_currency) VALUES (?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO trips (id,title,owner_id,start_date,end_date,timezone,home_timezone,currency,home_currency,destinations) VALUES (?,?,?,?,?,?,?,?,?,?)",
     ).bind(
       id,
       v.title,
@@ -37,6 +44,7 @@ export async function createTrip(request: Request, env: Env, memberId: string) {
       v.home_timezone,
       v.currency,
       v.home_currency,
+      JSON.stringify(v.destinations),
     ),
     env.DB.prepare(
       "INSERT INTO trip_members (trip_id,member_id) VALUES (?,?)",
@@ -53,7 +61,7 @@ export async function updateTrip(
   requireOwner(trip, memberId);
   const v = await body(request, tripSchema);
   const r = await env.DB.prepare(
-    "UPDATE trips SET title=?,start_date=?,end_date=?,timezone=?,home_timezone=?,currency=?,home_currency=?,version=version+1 WHERE id=? AND version=?",
+    "UPDATE trips SET title=?,start_date=?,end_date=?,timezone=?,home_timezone=?,currency=?,home_currency=?,destinations=?,version=version+1 WHERE id=? AND version=?",
   )
     .bind(
       v.title,
@@ -63,6 +71,7 @@ export async function updateTrip(
       v.home_timezone,
       v.currency,
       v.home_currency,
+      JSON.stringify(v.destinations),
       trip.id,
       v.version ?? 0,
     )

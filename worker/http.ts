@@ -50,11 +50,40 @@ export async function body<T>(
     throw new HttpError(400, "请求内容无法读取");
   }
   const result = schema.safeParse(value);
-  if (!result.success)
-    throw new HttpError(
-      400,
-      result.error.issues[0]?.message ?? "请检查填写内容",
-    );
+  if (!result.success) {
+    const issue = result.error.issues[0];
+    const names: Record<string, string> = {
+      email: "邮箱",
+      password: "密码",
+      title: "名称",
+      name: "昵称",
+      start_date: "出发日期",
+      end_date: "返回日期",
+      start: "开始时间",
+      end: "结束时间",
+      currency: "币种",
+      home_currency: "常用币种",
+      timezone: "当地时间",
+      home_timezone: "常住地时间",
+      endTimezone: "到达地时间",
+      date: "日期",
+      amount: "金额",
+      participants: "分摊成员",
+      documents: "关联资料",
+      note: "说明",
+      version: "内容版本",
+      destinations: "目的地",
+      token: "邀请口令",
+    };
+    const label = names[String(issue?.path[0])] ?? "填写内容";
+    const message =
+      issue && /[\u4e00-\u9fff]/.test(issue.message)
+        ? issue.message
+        : issue?.code === "too_big"
+          ? `${label}超出允许范围，请缩短内容或减小数值`
+          : `请检查${label}是否完整、正确`;
+    throw new HttpError(400, message);
+  }
   return result.data;
 }
 export function sameOrigin(request: Request) {

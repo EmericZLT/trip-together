@@ -32,16 +32,33 @@ export function selectEvents(events: TripEvent[], now: number) {
   const sorted = [...events].sort(
     (a, b) => Date.parse(a.start) - Date.parse(b.start),
   );
-  const current = sorted
+  const timed = sorted.filter(
+    (e) => e.timeMode !== "date" && !e.endUnspecified,
+  );
+  const current = timed
     .filter((e) => Date.parse(e.start) <= now && now < Date.parse(e.end))
     .at(-1);
-  const next = sorted.find((e) => Date.parse(e.start) > now);
+  const next = timed.find((e) => Date.parse(e.start) > now);
+  const flexible = sorted.find(
+    (e) =>
+      (e.timeMode === "date" || e.endUnspecified) &&
+      (e.kind === "stay"
+        ? localDate(now, e.endTimezone ?? e.timezone) <=
+          (e.dateEnd ?? localDate(e.end, e.endTimezone ?? e.timezone))
+        : localDate(now, e.timezone) <= localDate(e.start, e.timezone)),
+  );
+  const upcoming =
+    next && flexible
+      ? localDate(next.start, next.timezone) <=
+        localDate(flexible.start, flexible.timezone)
+        ? next
+        : flexible
+      : (next ?? flexible);
   return {
     current,
     next,
-    featured: current ?? next,
-    finished:
-      sorted.length > 0 && sorted.every((e) => now >= Date.parse(e.end)),
+    featured: current ?? upcoming,
+    finished: events.length > 0 && !current && !upcoming,
   };
 }
 export function countdown(target: string, now: number) {
@@ -53,12 +70,18 @@ export function countdown(target: string, now: number) {
   const clock = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   return days > 0 ? `${days} 天 ${clock}` : clock;
 }
-export function zoneName(zone: string) {
-  const labels: Record<string, string> = {
-    "Asia/Shanghai": "北京时间",
-    "Pacific/Auckland": "新西兰时间",
-    "Asia/Singapore": "新加坡时间",
-    UTC: "UTC",
-  };
-  return labels[zone] ?? zone;
+export { readableZone as zoneName } from "../../../shared/travel-options";
+export function eventTime(event: TripEvent, end = false) {
+  if (event.timeMode === "date")
+    return event.kind === "stay" ? (end ? "退房日期" : "入住日期") : "时间待定";
+  if (end && event.endUnspecified) return "到达时间待定";
+  return clockTime(
+    end ? event.end : event.start,
+    end ? (event.endTimezone ?? event.timezone) : event.timezone,
+  );
+}
+export function eventEndDate(event: TripEvent) {
+  return event.timeMode === "date" && event.dateEnd
+    ? dateLabel(`${event.dateEnd}T12:00:00Z`, "UTC")
+    : dateLabel(event.end, event.endTimezone ?? event.timezone);
 }

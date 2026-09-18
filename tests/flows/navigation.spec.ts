@@ -40,8 +40,13 @@ test("个人页切换、独立行程管理、非当前行程邀请与原页面�
   await expect(page.getByRole("heading", { name: "我的新昵称" })).toBeVisible();
   await manage();
   await page.getByRole("button", { name: /创建行程/ }).click();
-  await page.getByLabel("行程名称", { exact: true }).fill("当前旅行");
-  await page.getByRole("button", { name: "保存行程" }).click();
+  await page.getByLabel("行程名称（选填）", { exact: true }).fill("当前旅行");
+  await page.getByRole("button", { name: "目的地", exact: true }).click();
+  await page.getByRole("button", { name: "东京 · 日本", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "创建行程", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "还没有行程事项" }),
   ).toBeVisible();
@@ -77,7 +82,9 @@ test("个人页切换、独立行程管理、非当前行程邀请与原页面�
   const member = await new Client().register();
   expect((await member.request("/join", "POST", { token })).id).toBe(other.id);
   await page.getByRole("button", { name: /行程设置/ }).click();
-  await page.getByLabel("行程名称", { exact: true }).fill("另一段旅行更新");
+  await page
+    .getByLabel("行程名称（选填）", { exact: true })
+    .fill("另一段旅行更新");
   await page.getByRole("button", { name: "保存行程" }).click();
   await expect(
     page.getByRole("heading", { name: "另一段旅行更新", exact: true }),

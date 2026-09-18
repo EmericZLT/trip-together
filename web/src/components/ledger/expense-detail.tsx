@@ -83,7 +83,7 @@ export function ExpenseDetail({
           <h3>{expense.title}</h3>
           <div className="paid-amount">
             {money(expense.amount, expense.currency)}
-            <small>{expense.currency}</small>
+            <small>{currencyLabel(expense.currency)}</small>
           </div>
           <div className="paid-receipt-meta">
             <span>

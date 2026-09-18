@@ -50,7 +50,7 @@ export async function tripData(env: Env, memberId: string, trip: Trip) {
   ]);
   const visibleDocuments = new Set(documents.results.map((d) => d.id));
   return json({
-    trip,
+    trip: { ...trip, destinations: JSON.parse(trip.destinations ?? "[]") },
     me,
     members: members.results,
     events: events.results

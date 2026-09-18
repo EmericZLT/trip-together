@@ -4,7 +4,7 @@ import { Check, ChevronDown, Trash2 } from "lucide-react";
 import type { PreparationItem } from "@/lib/models";
 import { api } from "@/lib/api";
 import { Sheet } from "../ui";
-import { Field } from "../editors/fields";
+import { PreparationEditor } from "./preparation-editor";
 export function PreparationChecklist({
   items,
   checked,
@@ -17,10 +17,7 @@ export function PreparationChecklist({
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [adding, setAdding] = useState(false),
-    [removing, setRemoving] = useState<PreparationItem | null>(null),
-    [group, setGroup] = useState("出发准备"),
-    [title, setTitle] = useState(""),
-    [note, setNote] = useState("");
+    [removing, setRemoving] = useState<PreparationItem | null>(null);
   const completed = items.filter((i) => checked.includes(i.id)).length,
     groups = [...new Set(items.map((i) => i.group_name))];
   async function action(path: string, method: string, body?: object) {
@@ -119,42 +116,13 @@ export function PreparationChecklist({
         </p>
       )}
       {adding && (
-        <Sheet
-          open
-          title="添加准备事项"
-          onClose={() => !busy && setAdding(false)}
-        >
-          <form
-            className="editor-form"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (
-                await action("/preparation", "POST", {
-                  group_name: group,
-                  title,
-                  note,
-                })
-              ) {
-                setAdding(false);
-                setTitle("");
-                setNote("");
-              }
-            }}
-          >
-            <Field label="分组" value={group} required onChange={setGroup} />
-            <Field
-              label="准备事项"
-              value={title}
-              required
-              onChange={setTitle}
-            />
-            <Field label="说明" value={note} onChange={setNote} />
-            {error && <p role="alert">{error}</p>}
-            <button className="primary-button" disabled={busy}>
-              保存准备事项
-            </button>
-          </form>
-        </Sheet>
+        <PreparationEditor
+          error={error}
+          groups={groups}
+          existing={items.map((i) => i.title)}
+          onClose={() => setAdding(false)}
+          onAdd={(v) => action("/preparation", "POST", v)}
+        />
       )}
       {removing && (
         <Sheet

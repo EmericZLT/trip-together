@@ -1,0 +1,1 @@
+ALTER TABLE trips ADD COLUMN destinations TEXT NOT NULL DEFAULT '[]';

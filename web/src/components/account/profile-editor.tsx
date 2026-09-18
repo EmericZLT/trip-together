@@ -4,6 +4,7 @@ import type { Profile } from "@/lib/models";
 import { api } from "@/lib/api";
 import { uploadFile, validateFiles } from "@/lib/files/upload";
 import { Sheet } from "../ui";
+import { Avatar } from "../avatar";
 import { Field } from "../editors/fields";
 export function ProfileEditor({
   profile,
@@ -44,11 +45,16 @@ export function ProfileEditor({
     setError("");
     try {
       if (file) {
-        validateFiles([file]);
+        validateFiles([file], true);
         await uploadFile("/api/avatar", file, setProgress).promise;
       } else await api("/avatar", { method: "DELETE" });
+      const result = await api<{ me: Profile }>("/bootstrap");
+      setV((prev) => ({
+        ...prev,
+        version: result.me.version,
+        has_avatar: result.me.has_avatar,
+      }));
       await onSaved();
-      onClose();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -60,16 +66,29 @@ export function ProfileEditor({
     <Sheet open title="编辑个人资料" onClose={() => !busy && onClose()}>
       <form className="editor-form" onSubmit={save}>
         <p className="muted">昵称和头像供同行成员查看，证件信息仅本人可见。</p>
-        {Object.entries(fields).map(([key, label]) => (
-          <Field
-            key={key}
-            label={label}
-            type={key === "expiry" ? "date" : "text"}
-            value={v[key as keyof typeof fields]}
-            required={key === "name"}
-            onChange={(x) => setV({ ...v, [key]: x })}
-          />
-        ))}
+        <Field
+          label="昵称"
+          value={v.name}
+          required
+          maxLength={60}
+          onChange={(name) => setV({ ...v, name })}
+        />
+        <details className="optional-details">
+          <summary>证件信息（选填，仅自己可见）</summary>
+          <div className="optional-fields">
+            {Object.entries(fields)
+              .filter(([key]) => key !== "name")
+              .map(([key, label]) => (
+                <Field
+                  key={key}
+                  label={label}
+                  type={key === "expiry" ? "date" : "text"}
+                  value={v[key as keyof typeof fields]}
+                  onChange={(value) => setV({ ...v, [key]: value })}
+                />
+              ))}
+          </div>
+        </details>
         {error && (
           <p role="alert" className="error-message">
             {error}
@@ -78,7 +97,8 @@ export function ProfileEditor({
         <button className="primary-button" disabled={busy}>
           保存个人资料
         </button>
-        <div className="surface editor-form">
+        <div className="optional-fields">
+          <Avatar member={v} className="profile-avatar" />
           <label>
             上传头像
             <input
@@ -94,7 +114,7 @@ export function ProfileEditor({
           {progress !== null && (
             <progress value={progress} max={100} aria-label="头像上传进度" />
           )}
-          {profile.has_avatar ? (
+          {v.has_avatar ? (
             <button
               type="button"
               className="text-action"
@@ -104,7 +124,7 @@ export function ProfileEditor({
               移除头像
             </button>
           ) : null}
-          <small>上传头像会立即保存；请先保存其他资料修改。</small>
+          <small>头像修改后立即生效，其他资料可以继续填写。</small>
         </div>
       </form>
     </Sheet>
@@ -130,7 +150,7 @@ export function PasswordEditor({
     >
       {saved ? (
         <div className="editor-form">
-          <p>旧会话已经失效，请使用新密码重新登录。</p>
+          <p>密码已经更新，请使用新密码重新登录。</p>
           <button
             className="primary-button"
             onClick={() => void onLogout().catch(() => location.reload())}

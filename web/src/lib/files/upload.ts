@@ -1,14 +1,15 @@
+import { prepareFile } from "./prepare";
 export function uploadFile(
   url: string,
   file: File,
   onProgress: (progress: number) => void,
 ) {
   const xhr = new XMLHttpRequest();
+  let aborted = false;
   const promise = new Promise<void>((resolve, reject) => {
     xhr.open("PUT", url);
     xhr.timeout = 120000;
-    xhr.setRequestHeader("Content-Type", file.type);
-    xhr.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
+
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable)
         onProgress(
@@ -30,19 +31,42 @@ export function uploadFile(
     xhr.onerror = () => reject(new Error("网络连接失败，请重试"));
     xhr.ontimeout = () => reject(new Error("上传超时，请重试"));
     xhr.onabort = () => reject(new Error("上传已取消"));
-    xhr.send(file);
+    void prepareFile(file)
+      .then((prepared) => {
+        if (aborted) {
+          reject(new Error("上传已取消"));
+          return;
+        }
+        validateFiles([prepared]);
+        xhr.setRequestHeader("Content-Type", prepared.type);
+        xhr.setRequestHeader("X-File-Name", encodeURIComponent(prepared.name));
+        xhr.send(prepared);
+      })
+      .catch(reject);
   });
-  return { promise, abort: () => xhr.abort() };
+  return {
+    promise,
+    abort: () => {
+      aborted = true;
+      xhr.abort();
+    },
+  };
 }
-export function validateFiles(files: File[]) {
+export function validateFiles(files: File[], allowCompression = false) {
   for (const file of files) {
     if (
       !["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(
         file.type,
       )
     )
-      throw new Error("支持 JPG、PNG、WebP 或 PDF 文件");
-    if (file.size > 10 * 1024 * 1024) throw new Error("每份文件不能超过 10 MB");
+      throw new Error(
+        "请选择 JPG、PNG、WebP 图片或 PDF；HEIC 照片请先导出为 JPG",
+      );
+    if (
+      file.size > 10 * 1024 * 1024 &&
+      !(allowCompression && file.type.startsWith("image/"))
+    )
+      throw new Error("文件处理后仍超过 10 MB，请选择较小文件或拆分 PDF");
     if (!file.size) throw new Error("不能上传空文件");
   }
 }

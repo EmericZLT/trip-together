@@ -1,0 +1,176 @@
+import { test, expect } from "@playwright/test";
+import { Client, createTrip, png } from "../support/api";
+async function login(page: import("@playwright/test").Page, account: Client) {
+  await page.goto("/");
+  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("密码", { exact: true }).fill(account.password);
+  await page.getByRole("button", { name: "登录", exact: true }).click();
+}
+test("活动只需名称和日期；住宿、上传关联、头像与昵称保存；草稿关闭保护", async ({
+  page,
+  browserName,
+}) => {
+  const account = await new Client().register();
+  const id = await createTrip(account);
+  await login(page, account);
+  await page.getByRole("button", { name: "行程", exact: true }).click();
+  await page.getByRole("button", { name: /第 2 天/ }).click();
+  await page.getByRole("button", { name: "添加事项", exact: true }).click();
+  await expect(page.getByLabel("日期", { exact: true })).toHaveValue(
+    "2030-06-02",
+  );
+  await expect(page.getByLabel("活动名称")).toBeVisible();
+  await expect(page.getByLabel("开始时间", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("出发地", { exact: true })).toHaveCount(0);
+  await page.getByLabel("活动名称").fill("公园散步");
+  await page.getByRole("button", { name: "关闭", exact: true }).click();
+  await expect(
+    page.getByText("还有未保存的内容，要继续编辑吗？"),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "继续编辑" }).click();
+  await expect(page.getByLabel("活动名称")).toHaveValue("公园散步");
+  for (const width of [320, 390, 1280]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: `.local/simple-event-${browserName}.png` });
+  await page.getByRole("button", { name: "添加活动", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: /公园散步.*查看详情/ }),
+  ).toBeVisible();
+  let data = await account.request(`/trips/${id}/data`);
+  expect(data.events[0].timeMode).toBe("date");
+  await page.getByRole("button", { name: "添加事项", exact: true }).click();
+  await page.getByRole("button", { name: "住宿", exact: true }).click();
+  await expect(page.getByLabel("出发地", { exact: true })).toHaveCount(0);
+  await page.getByLabel("酒店名称").fill("湖边酒店");
+  await page.getByLabel("退房日期").fill("2030-06-04");
+  await page.getByRole("button", { name: "＋ 添加住宿订单" }).click();
+  await page.getByLabel("选择照片或文件").setInputFiles([
+    { name: "酒店订单.png", mimeType: "image/png", buffer: png },
+    { name: "入住说明.png", mimeType: "image/png", buffer: png },
+  ]);
+  await page.getByRole("button", { name: "上传 2 份资料" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await expect(page.getByLabel("酒店订单.png", { exact: true })).toBeChecked();
+  await page.getByRole("button", { name: "添加住宿", exact: true }).click();
+  data = await account.request(`/trips/${id}/data`);
+  expect(
+    data.events.find((e: any) => e.title === "湖边酒店").documents,
+  ).toHaveLength(2);
+  await page.getByRole("button", { name: "我的", exact: true }).click();
+  await page.getByRole("button", { name: "编辑个人资料" }).click();
+  await page.getByLabel("昵称", { exact: true }).fill("新的昵称");
+  await page
+    .getByLabel("上传头像", { exact: true })
+    .setInputFiles({ name: "头像.png", mimeType: "image/png", buffer: png });
+  await expect(page.getByRole("button", { name: "移除头像" })).toBeVisible();
+  await expect(page.getByLabel("昵称", { exact: true })).toHaveValue(
+    "新的昵称",
+  );
+  await page.getByRole("button", { name: "保存个人资料" }).click();
+  await expect(page.getByRole("heading", { name: "新的昵称" })).toBeVisible();
+});
+test("新增目的地与币种采用中文；失败重试不重复上传成功文件", async ({
+  page,
+}) => {
+  const account = await new Client().register();
+  await createTrip(account);
+  await login(page, account);
+  await page.getByRole("button", { name: "资料", exact: true }).click();
+  await page.getByRole("button", { name: "上传旅行资料", exact: true }).click();
+  let fail = true;
+  await page.route("**/documents/*", async (route) => {
+    if (
+      route.request().method() === "PUT" &&
+      decodeURIComponent(route.request().headers()["x-file-name"] ?? "") ===
+        "失败后重试.png" &&
+      fail
+    ) {
+      fail = false;
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "网络繁忙，请重试" }),
+      });
+    } else await route.continue();
+  });
+  await page.getByLabel("选择照片或文件").setInputFiles([
+    { name: "已完成.png", mimeType: "image/png", buffer: png },
+    { name: "失败后重试.png", mimeType: "image/png", buffer: png },
+  ]);
+  await page.getByRole("button", { name: "上传 2 份资料" }).click();
+  await expect(page.getByText("网络繁忙，请重试")).toBeVisible();
+  await page.getByRole("button", { name: "重试未完成的文件" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "查看已完成.png", exact: true }),
+  ).toHaveCount(1);
+  await page.getByRole("button", { name: "账本", exact: true }).click();
+  await page.getByRole("button", { name: "新增支出" }).click();
+  await page.getByRole("button", { name: "币种", exact: true }).click();
+  await page.getByLabel("搜索币种").fill("泰铢");
+  await page.getByRole("button", { name: "泰铢", exact: true }).click();
+  await page.getByLabel("金额", { exact: true }).fill("300");
+  await page.getByLabel("支出名称", { exact: true }).fill("午餐");
+  await page.getByRole("button", { name: "保存支出", exact: true }).click();
+  await page.getByRole("button", { name: "泰铢", exact: true }).click();
+  await expect(page.getByText("午餐", { exact: true })).toBeVisible();
+});
+test("目的地搜索、多城市保存和跨时区航班时间", async ({
+  page,
+  browserName,
+}) => {
+  const account = await new Client().register();
+  await login(page, account);
+  await page.getByRole("button", { name: "前往我的行程" }).click();
+  await page.getByRole("button", { name: /创建行程/ }).click();
+  await page.getByRole("button", { name: "目的地", exact: true }).click();
+  await page.getByLabel("搜索目的地").fill("东京");
+  await page.getByRole("button", { name: "东京 · 日本", exact: true }).click();
+  await page.getByRole("button", { name: "＋ 添加其他目的地" }).click();
+  await page.getByRole("button", { name: "目的地", exact: true }).click();
+  await page.getByLabel("搜索目的地").fill("曼谷");
+  await page.getByRole("button", { name: "曼谷 · 泰国", exact: true }).click();
+  await page.getByLabel("出发日期", { exact: true }).fill("2030-06-01");
+  await page.getByLabel("返回日期", { exact: true }).fill("2030-06-07");
+  await expect(
+    page.getByText("使用日元 · 东京 · 日本", { exact: true }),
+  ).toBeVisible();
+  await page.screenshot({ path: `.local/simple-trip-${browserName}.png` });
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "创建行程", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "还没有行程事项" }),
+  ).toBeVisible();
+  const trip = (await account.request("/bootstrap")).trips[0];
+  expect(trip.destinations).toHaveLength(2);
+  expect(trip.currency).toBe("JPY");
+  await page.getByRole("button", { name: "行程", exact: true }).click();
+  await page.getByRole("button", { name: "添加事项", exact: true }).click();
+  await page.getByRole("button", { name: "航班", exact: true }).click();
+  await page.getByLabel("出发地", { exact: true }).fill("上海");
+  await page.getByLabel("目的地", { exact: true }).fill("东京");
+  await page.getByLabel("已知起飞和落地时间").check();
+  await page.getByLabel("起飞时间", { exact: true }).fill("09:00");
+  await page.getByLabel("落地时间", { exact: true }).fill("12:00");
+  await page.getByText("出发地与到达地当地时间", { exact: true }).click();
+  await page
+    .getByRole("button", { name: "出发地当地时间", exact: true })
+    .click();
+  await page.getByLabel("搜索出发地当地时间").fill("北京");
+  await page.getByRole("button", { name: "北京 · 中国", exact: true }).click();
+  await page.getByRole("button", { name: "添加航班", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const event = (await account.request(`/trips/${trip.id}/data`)).events[0];
+  expect(event.start).toBe("2030-06-01T01:00:00.000Z");
+  expect(event.end).toBe("2030-06-01T03:00:00.000Z");
+  expect(event.title).toBe("上海 → 东京");
+});
