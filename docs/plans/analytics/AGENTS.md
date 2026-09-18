@@ -1,4 +1,4 @@
-# Umami 产品统计
+# OpenPanel 产品统计
 
 - [进度事实源](progress.md)
 - [指标与采集](01-measurement.md)

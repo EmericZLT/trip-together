@@ -1,59 +1,72 @@
-export const boardName = "TripTogether · 产品使用";
-export const goals = [
-  ["account_registered", "新增注册"],
-  ["email_verified", "完成邮箱验证"],
-  ["trip_created", "创建行程"],
-  ["trip_joined", "加入同行行程"],
-  ["trip_became_multiplayer", "形成多人行程"],
-  ["event_created", "创建行程事项"],
-  ["document_uploaded", "上传旅行资料"],
-  ["expense_created", "记录支出"],
-];
-export function boardParameters(websiteId, reports, text) {
-  const column = (id, type, title, props = {}) => ({
-    id,
-    component: { type, title, props },
-  });
-  return {
-    websiteId,
-    rows: [
-      {
-        id: "product-totals",
-        columns: [
-          column("trip-product-totals", "TextBlock", "当前产品总量", { text }),
-        ],
-      },
-      {
-        id: "event-trends",
-        columns: [column("product-events", "EventsChart", "新增行为趋势")],
-      },
-      ...[0, 2, 4, 6].map((i) => ({
-        id: `goals-${i}`,
-        columns: goals
-          .slice(i, i + 2)
-          .map(([event, label]) =>
-            column(`goal-${event}`, "Goal", label, {
-              reportId: reports[event],
-            }),
-          ),
-      })),
-      {
-        id: "features",
-        columns: [
-          column("feature-events", "MetricsTable", "功能使用分布", {
-            type: "event",
-            limit: 20,
-          }),
-        ],
-      },
-      {
-        id: "measurement-notes",
-        columns: [
-          column("measurement-notes-text", "TextBlock", "统计口径", {
-            text: "顶部总量来自业务数据库，包含历史数据；定时更新，以标注时间为准，不跟随日期筛选。下方 Umami 图表只包含开始采集后的事件，不能用 visitors 代替注册账号数。网络响应丢失时重发可能重复，业务总量以顶部为准。服务端发送的数据不适合分析真实设备和地理位置。多人行程表示至少两位成员实际加入；事项数包括航班、住宿、交通和游玩。",
-          }),
-        ],
-      },
-    ],
-  };
-}
+// Report recipes, not undocumented OpenPanel API request bodies.
+export const dashboard = {
+  name: "TripTogether · 产品使用",
+  visibility: "private",
+  exclude: { source: "integration_test" },
+  reports: [
+    {
+      name: "新增账号与邮箱验证",
+      chart: "line",
+      events: ["account_registered", "email_verified"],
+      aggregation: "unique profiles",
+    },
+    {
+      name: "创建行程的用户",
+      chart: "metric",
+      events: ["trip_created"],
+      aggregation: "unique profiles",
+    },
+    {
+      name: "新增行程、事项与多人协作",
+      chart: "line",
+      events: ["trip_created", "event_created", "trip_became_multiplayer"],
+      aggregation: "event count",
+    },
+    {
+      name: "事项类型",
+      chart: "bar",
+      events: ["event_created"],
+      breakdown: "kind",
+      aggregation: "event count",
+    },
+    {
+      name: "首次使用转化",
+      chart: "funnel",
+      events: ["account_registered", "trip_created", "event_created"],
+      aggregation: "unique profiles",
+      window: "7 days",
+    },
+    {
+      name: "资料与记账",
+      chart: "line",
+      events: ["document_uploaded", "expense_created"],
+      aggregation: "unique profiles",
+    },
+    {
+      name: "事项填写步骤",
+      chart: "funnel",
+      events: [
+        "event_step_viewed:step=1",
+        "event_step_viewed:step=2",
+        "event_step_viewed:step=3",
+        "event_step_viewed:step=4",
+        "event_created",
+      ],
+      window: "1 day",
+    },
+    {
+      name: "页面使用",
+      chart: "bar",
+      events: ["screen_view"],
+      breakdown: "page",
+      aggregation: "unique profiles",
+    },
+  ],
+  notes: [
+    "当前总量读取受保护的 /api/analytics/summary，包含历史数据；不能用访问人数替代注册人数。",
+    "此处报告仅覆盖开始采集后的行为。多人行程表示至少两位成员实际加入。",
+    "事件至少一次投递；极少数网络故障可能重复，delivery_id 用于排查。",
+    "首次使用漏斗用于新注册且自己创建行程的人；加入他人行程的用户单独分析 trip_joined。",
+    "服务端发送不转发用户 IP 和 UA，不使用地域、设备或浏览会话报表推断用户。",
+  ],
+};

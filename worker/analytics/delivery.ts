@@ -1,5 +1,4 @@
 import { analyticsConfig, anonymousId, type AnalyticsEnv } from "./config";
-import { updateBoard } from "./board";
 type Row = {
   id: string;
   name: string;
@@ -9,9 +8,6 @@ type Row = {
   created_at: number;
   attempts: number;
 };
-// Server-origin events have no meaningful visitor device or geographical location.
-const agent =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
 export async function deliverEvents(env: AnalyticsEnv) {
   const config = analyticsConfig(env);
   if (!config) return { sent: 0, failed: 0 };
@@ -40,22 +36,29 @@ export async function deliverEvents(env: AnalyticsEnv) {
           data[field] = metadata[field];
       if (row.entity_id)
         data.entity = await anonymousId(config.key, `entity:${row.entity_id}`);
-      const response = await fetch(`${config.origin}/api/send`, {
+      const profileId = await anonymousId(
+        config.key,
+        row.actor_id ?? `event:${row.id}`,
+      );
+      const response = await fetch(`${config.origin}/track`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "User-Agent": agent },
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "TripTogether-Analytics/1.0",
+          "openpanel-client-id": config.clientId,
+          "openpanel-client-secret": config.clientSecret,
+        },
         body: JSON.stringify({
-          type: "event",
+          type: "track",
           payload: {
-            website: config.website,
-            hostname: config.hostname,
-            id: await anonymousId(
-              config.key,
-              row.actor_id ?? `event:${row.id}`,
-            ),
-            url: metadata.page ? `/${metadata.page}` : "/product-events",
-            ...(row.name === "page_viewed" ? {} : { name: row.name }),
-            timestamp: row.created_at,
-            data,
+            name: row.name === "page_viewed" ? "screen_view" : row.name,
+            profileId,
+            properties: {
+              ...data,
+              __timestamp: new Date(row.created_at * 1000).toISOString(),
+              __deviceId: profileId,
+              __url: `https://${config.hostname}/${metadata.page ?? "product-events"}`,
+            },
           },
         }),
         signal: AbortSignal.timeout(5000),
@@ -91,18 +94,6 @@ export async function analyticsScheduled(env: AnalyticsEnv) {
     if (!analyticsConfig(env)) return;
     const result = await deliverEvents(env);
     console.log(JSON.stringify({ event: "analytics_delivery", ...result }));
-    const hour = new Date().toISOString().slice(0, 13);
-    const previous = await env.DB.prepare(
-      "SELECT value FROM analytics_state WHERE key='board_updated_hour'",
-    ).first<string>("value");
-    if (previous !== hour && env.UMAMI_BOARD_ID && env.UMAMI_API_TOKEN) {
-      await updateBoard(env);
-      await env.DB.prepare(
-        "INSERT INTO analytics_state(key,value) VALUES ('board_updated_hour',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-      )
-        .bind(hour)
-        .run();
-    }
   } catch {
     console.error(JSON.stringify({ event: "analytics_delivery_failed" }));
   }

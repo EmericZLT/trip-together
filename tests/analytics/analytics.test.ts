@@ -75,7 +75,7 @@ test("统计总量、数据库成功事件、重复加入和文件上传不会�
     await f.close();
   }
 });
-test("Umami 失败持久重试、并发租约、本地停用与匿名数据白名单", async () => {
+test("OpenPanel 失败持久重试、并发租约、本地停用与匿名数据白名单", async () => {
   const f = await fixture();
   const original = globalThis.fetch;
   try {
@@ -101,6 +101,21 @@ test("Umami 失败持久重试、并发租约、本地停用与匿名数据白�
     await f.DB.prepare("UPDATE analytics_events SET next_attempt_at=0").run();
     const bodies: string[] = [];
     globalThis.fetch = async (_url, init) => {
+      assert.equal(String(_url), "https://analytics.example.test/track");
+      const headers = new Headers(init?.headers);
+      assert.equal(
+        headers.get("openpanel-client-id"),
+        f.env.OPENPANEL_CLIENT_ID,
+      );
+      assert.equal(headers.get("openpanel-client-secret"), "test-secret");
+      assert.equal(headers.get("x-client-ip"), null);
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.type, "track");
+      assert.equal(body.payload.name, "account_registered");
+      assert.match(body.payload.profileId, /^[a-f0-9]{64}$/);
+      assert.equal(body.payload.properties.__deviceId, body.payload.profileId);
+      assert.ok(!Number.isNaN(Date.parse(body.payload.properties.__timestamp)));
+      assert.ok(!String(init?.body).includes("test-secret"));
       bodies.push(String(init?.body));
       return Response.json({ sessionId: crypto.randomUUID() });
     };
@@ -158,7 +173,7 @@ test("浏览事件拒绝自由文本，重复 ID 去重，匿名访问不计活�
   }
 });
 
-test("历史账号进入总量但不伪造新增事件；看板快照只更新指定区域", async () => {
+test("历史账号进入总量但不伪造新增事件", async () => {
   const f = await fixture(async (db) => {
     await db
       .prepare(
@@ -173,52 +188,6 @@ test("历史账号进入总量但不伪造新增事件；看板快照只更新�
       (await f.DB.prepare("SELECT count(*) n FROM analytics_events").first())!
         .n,
       0,
-    );
-    const { updateBoard } = await import("../../worker/analytics/board");
-    const env = {
-      ...f.env,
-      UMAMI_API_ORIGIN: "https://analytics.example.test/api",
-      UMAMI_API_TOKEN: "secret-test-token",
-      UMAMI_BOARD_ID: "board",
-    };
-    let updated: any;
-    globalThis.fetch = async (_url, init) => {
-      if (init?.method === "POST") {
-        updated = JSON.parse(String(init.body));
-        return Response.json({ id: "board" });
-      }
-      return Response.json({
-        parameters: {
-          websiteId: env.UMAMI_WEBSITE_ID,
-          rows: [
-            {
-              columns: [
-                {
-                  id: "trip-product-totals",
-                  component: { type: "TextBlock", props: { text: "old" } },
-                },
-              ],
-            },
-            {
-              columns: [
-                {
-                  id: "user-custom",
-                  component: { type: "TextBlock", props: { text: "keep me" } },
-                },
-              ],
-            },
-          ],
-        },
-      });
-    };
-    await updateBoard(env);
-    assert.match(
-      updated.parameters.rows[0].columns[0].component.props.text,
-      /用户数 1/,
-    );
-    assert.equal(
-      updated.parameters.rows[1].columns[0].component.props.text,
-      "keep me",
     );
   } finally {
     globalThis.fetch = original;

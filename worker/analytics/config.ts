@@ -1,11 +1,9 @@
 export type AnalyticsEnv = Env & {
   ANALYTICS_ENABLED?: string;
   ANALYTICS_HOSTNAME?: string;
-  UMAMI_ORIGIN?: string;
-  UMAMI_API_ORIGIN?: string;
-  UMAMI_WEBSITE_ID?: string;
-  UMAMI_BOARD_ID?: string;
-  UMAMI_API_TOKEN?: string;
+  OPENPANEL_ORIGIN?: string;
+  OPENPANEL_CLIENT_ID?: string;
+  OPENPANEL_CLIENT_SECRET?: string;
   ANALYTICS_HASH_KEY?: string;
   ANALYTICS_READ_TOKEN?: string;
 };
@@ -15,12 +13,13 @@ export function analyticsConfig(env: AnalyticsEnv) {
   if (
     !env.ANALYTICS_HASH_KEY ||
     env.ANALYTICS_HASH_KEY.length < 32 ||
-    !env.UMAMI_WEBSITE_ID ||
-    !env.UMAMI_ORIGIN ||
+    !env.OPENPANEL_CLIENT_ID ||
+    !env.OPENPANEL_CLIENT_SECRET ||
+    !env.OPENPANEL_ORIGIN ||
     !env.ANALYTICS_HOSTNAME
   )
     return null;
-  const origin = new URL(env.UMAMI_ORIGIN);
+  const origin = new URL(env.OPENPANEL_ORIGIN);
   if (
     origin.protocol !== "https:" ||
     origin.username ||
@@ -34,7 +33,8 @@ export function analyticsConfig(env: AnalyticsEnv) {
     throw new Error("Invalid analytics hostname");
   return {
     origin: origin.origin,
-    website: env.UMAMI_WEBSITE_ID,
+    clientId: env.OPENPANEL_CLIENT_ID,
+    clientSecret: env.OPENPANEL_CLIENT_SECRET,
     hostname: env.ANALYTICS_HOSTNAME,
     key: env.ANALYTICS_HASH_KEY,
   };

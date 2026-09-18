@@ -41,8 +41,9 @@ export async function fixture(
     APP_ENV: "production",
     ANALYTICS_ENABLED: "true",
     ANALYTICS_HOSTNAME: "example.test",
-    UMAMI_ORIGIN: "https://analytics.example.test",
-    UMAMI_WEBSITE_ID: "11111111-1111-4111-8111-111111111111",
+    OPENPANEL_ORIGIN: "https://analytics.example.test",
+    OPENPANEL_CLIENT_ID: "11111111-1111-4111-8111-111111111111",
+    OPENPANEL_CLIENT_SECRET: "test-secret",
     ANALYTICS_HASH_KEY: "test-key-".repeat(8),
   } as AnalyticsEnv;
   const member = async (id: string, verified = false) =>

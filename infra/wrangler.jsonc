@@ -39,10 +39,8 @@
     "EMAIL_FROM": "",
     "ANALYTICS_ENABLED": "false",
     "ANALYTICS_HOSTNAME": "",
-    "UMAMI_ORIGIN": "https://cloud.umami.is",
-    "UMAMI_API_ORIGIN": "https://api.umami.is/v1",
-    "UMAMI_WEBSITE_ID": "",
-    "UMAMI_BOARD_ID": ""
+    "OPENPANEL_ORIGIN": "https://api.openpanel.dev",
+    "OPENPANEL_CLIENT_ID": ""
   },
   "send_email": [
     {
