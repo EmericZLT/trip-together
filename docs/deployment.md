@@ -115,6 +115,8 @@ npx wrangler d1 time-travel info DB --config infra/wrangler.production.jsonc
 
 事项通过服务端调用 [Geoapify Geocoding](https://apidocs.geoapify.com/docs/geocoding/)，前端仅请求本站 `/api/places`，不依赖用户浏览器访问 Google。搜索需要登录，限制每个账号 15 分钟 120 次，8 秒超时，不使用 IP 推测位置。没有 Key 时搜索显示暂不可用，其余事项录入仍可使用。
 
+先按照完整文字搜索；没有匹配结果时，再使用同样关键词按城市名称查询。最多两次上游调用，共用 8 秒超时；已有匹配时不增加调用，服务错误仍然显示失败。结果最多 6 个，不默认限制国家或根据 IP 排序。
+
 在 Geoapify 创建项目后，本地将 `GEOAPIFY_API_KEY` 设置到忽略文件 `infra/.dev.vars`，重启预览；生产环境通过 `npx wrangler secret put GEOAPIFY_API_KEY --config infra/wrangler.production.jsonc` 配置，并将该名称加入生产配置 `secrets.required`。不要把值写入 vars、源码或前端。请求仅包含用户主动提交的地点关键词，不发送账号或行程信息。
 
 用户确认候选地点后保存名称、地址、WGS84 经纬度和来源；旧文字地址仍然保留。数据署名显示 Geoapify / OpenStreetMap。不同地区与中文别名的覆盖存在差异，没有精确结果时可尝试城市名及当地名称，或稍后补充。导航使用 Apple Maps 坐标路线链接，旧文字地址使用搜索链接；不将 WGS84 坐标直接当作高德 GCJ-02 坐标使用。

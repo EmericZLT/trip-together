@@ -16,14 +16,19 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   const account = await new Client().register(),
     id = await createTrip(account);
   let searches = 0;
-  await page.route("**/api/places?*", (route) =>
-    ++searches === 1
-      ? route.fulfill({
-          status: 503,
-          json: { error: "地点搜索暂时失败，请重试" },
-        })
-      : route.fulfill({ json: { places: [paris] } }),
-  );
+  let releaseSearch!: () => void;
+  const pendingSearch = new Promise<void>((resolve) => {
+    releaseSearch = resolve;
+  });
+  await page.route("**/api/places?*", async (route) => {
+    if (++searches === 1) {
+      await pendingSearch;
+      await route.fulfill({
+        status: 503,
+        json: { error: "地点搜索暂时失败，请重试" },
+      });
+    } else await route.fulfill({ json: { places: [paris] } });
+  });
   await page.goto("/");
   await page.getByLabel("邮箱", { exact: true }).fill(account.email);
   await page.getByLabel("密码", { exact: true }).fill(account.password);
@@ -85,6 +90,17 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   await next();
   await page.getByLabel("搜索地点", { exact: true }).fill("巴黎 铁塔");
   await page.getByRole("button", { name: "搜索地点结果" }).click();
+  const searchButton = page.getByRole("button", { name: "搜索地点结果" });
+  await expect(searchButton).toBeDisabled();
+  await expect(searchButton).toHaveAttribute("aria-busy", "true");
+  await expect(searchButton.locator(".place-search-spinner")).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(searchButton.locator(".place-search-spinner")).toHaveCSS(
+    "animation-name",
+    "place-search-spin",
+  );
+  releaseSearch();
+
   await expect(
     page.getByRole("alert").filter({ hasText: "地点搜索暂时失败" }),
   ).toBeVisible();

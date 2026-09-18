@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { MapPin, Search, X } from "lucide-react";
+import { MapPin, Search, X, LoaderCircle } from "lucide-react";
 import type { Place } from "../../../../../shared/places";
 import { api } from "@/lib/api";
 export function PlacePicker({
@@ -56,7 +56,7 @@ export function PlacePicker({
         <div className="place-search">
           <input
             aria-label={`搜索${label}`}
-            placeholder="搜索酒店、景点或机场"
+            placeholder="搜索城市、酒店、景点或机场"
             maxLength={200}
             value={query}
             onChange={(e) => {
@@ -80,9 +80,18 @@ export function PlacePicker({
             className="secondary-button"
             aria-label={`搜索${label}结果`}
             disabled={busy}
+            aria-busy={busy}
             onClick={() => void search()}
           >
-            <Search size={18} />
+            {busy ? (
+              <LoaderCircle
+                size={18}
+                className="place-search-spinner"
+                aria-hidden="true"
+              />
+            ) : (
+              <Search size={18} aria-hidden="true" />
+            )}
             {busy ? "搜索中" : "搜索"}
           </button>
         </div>

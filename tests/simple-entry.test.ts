@@ -82,3 +82,45 @@ test("地点搜索需要登录；选择的坐标持久保存并校验边界", as
     400,
   );
 });
+
+test("地点无结果时按城市查询；已有匹配和请求失败均不额外查询", async () => {
+  const { findPlaces } = await import("../worker/places/provider");
+  const city = {
+    place_id: "test-city",
+    name: "杭州市",
+    formatted: "杭州市, 浙江省, 中国",
+    lat: 30.25,
+    lon: 120.2,
+    country_code: "cn",
+  };
+  const calls: URL[] = [];
+  const places = await findPlaces("杭州", "test-key", async (url) => {
+    calls.push(url);
+    return Response.json({ results: calls.length === 1 ? [] : [city] });
+  });
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].searchParams.get("text"), "杭州");
+  assert.equal(calls[1].searchParams.get("city"), "杭州");
+  assert.equal(calls[1].searchParams.get("type"), "city");
+  assert.equal(calls[1].searchParams.get("bias"), "countrycode:none");
+  assert.equal(places[0].name, "杭州市");
+  let count = 0;
+  assert.equal(
+    (
+      await findPlaces("杭州市", "test-key", async () => {
+        count++;
+        return Response.json({ results: [city, { ...city, lat: 100 }] });
+      })
+    ).length,
+    1,
+  );
+  assert.equal(count, 1);
+  count = 0;
+  await assert.rejects(() =>
+    findPlaces("杭州", "test-key", async () => {
+      count++;
+      return new Response(null, { status: 503 });
+    }),
+  );
+  assert.equal(count, 1);
+});
