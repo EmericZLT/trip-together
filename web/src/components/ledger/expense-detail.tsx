@@ -123,7 +123,7 @@ export function ExpenseDetail({
           <div className="expense-detail-heading">
             <h3>
               <ReceiptText size={17} />
-              付款凭证
+              付款资料
             </h3>
             <span>{files.length} 份</span>
           </div>
@@ -141,7 +141,7 @@ export function ExpenseDetail({
             >
               <ReceiptText size={24} strokeWidth={1.3} />
               <span>
-                尚未添加凭证<small>点击添加图片或 PDF</small>
+                尚未添加资料<small>点击添加图片或 PDF</small>
               </span>
               <Pencil size={15} />
             </button>

@@ -153,7 +153,7 @@ export function Today({
           <h3>{data.events.length ? "行程已结束" : "还没有行程事项"}</h3>
           <p>
             {data.events.length
-              ? "行程、凭证和账本仍然可以随时查看。"
+              ? "行程、资料和账本仍然可以随时查看。"
               : "前往完整行程，添加航班、住宿或活动。"}
           </p>
           <button

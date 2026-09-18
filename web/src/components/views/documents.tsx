@@ -109,7 +109,7 @@ export function Documents({
             <Plus size={23} />
           </button>
         </div>
-        <p className="muted">查看、出示或下载机票、酒店凭证和行程文件。</p>
+        <p className="muted">查看、出示或下载机票、酒店资料和行程文件。</p>
       </div>
       {uploading && (
         <DocumentUpload
@@ -172,7 +172,7 @@ export function Documents({
           <p>
             {documents.length
               ? "尝试其他关键词或分类。"
-              : "上传机票、住宿凭证或行程文件，方便旅行时查看。"}
+              : "上传机票、住宿资料或行程文件，方便旅行时查看。"}
           </p>
           <button
             className="text-action"

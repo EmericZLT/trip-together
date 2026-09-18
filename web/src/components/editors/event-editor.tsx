@@ -23,16 +23,18 @@ export function EventEditor({
   event,
   data,
   initialDate,
+  initialStep = 1,
   onClose,
   onSaved,
 }: {
   event?: TripEvent;
   data: TripData;
   initialDate?: string;
+  initialStep?: 1 | 4;
   onClose: () => void;
   onSaved: (date?: string) => Promise<void>;
 }) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<number>(initialStep);
   const zone = event?.timezone ?? data.trip.timezone;
   const day = initialDate ?? data.trip.start_date;
   const [v, setV] = useState({

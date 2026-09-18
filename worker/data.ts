@@ -38,7 +38,7 @@ export async function tripData(env: Env, memberId: string, trip: Trip) {
       .bind(trip.id, memberId)
       .all<{ item_id: string }>(),
     env.DB.prepare(
-      "SELECT id,name,mime,size,expense_id,uploaded_by,'支出凭证' AS category,NULL AS owner_id FROM receipts WHERE trip_id=? AND expense_id IS NOT NULL",
+      "SELECT id,name,mime,size,expense_id,uploaded_by,'支出资料' AS category,NULL AS owner_id FROM receipts WHERE trip_id=? AND expense_id IS NOT NULL",
     )
       .bind(trip.id)
       .all(),

@@ -66,7 +66,7 @@ export async function saveExpense(
     input.receiptIds &&
     new Set(input.receiptIds).size !== input.receiptIds.length
   )
-    throw new HttpError(400, "凭证重复");
+    throw new HttpError(400, "资料重复");
   for (const receiptId of input.receiptIds ?? []) {
     const receipt = await env.DB.prepare(
       "SELECT uploaded_by,expense_id FROM receipts WHERE id=? AND trip_id=?",
@@ -80,7 +80,7 @@ export async function saveExpense(
         (receipt.expense_id === null && receipt.uploaded_by === memberId)
       )
     )
-      throw new HttpError(403, "无法关联这份凭证");
+      throw new HttpError(403, "无法关联这份资料");
   }
   const token = crypto.randomUUID();
   const statements: D1PreparedStatement[] = [];
@@ -140,7 +140,7 @@ export async function saveExpense(
   } catch (error) {
     if (error instanceof HttpError) throw error;
     if (error instanceof Error && /constraint|UNIQUE/i.test(error.message))
-      throw new HttpError(409, "记录或凭证已经变更，请刷新后重试");
+      throw new HttpError(409, "记录或资料已经变更，请刷新后重试");
     throw error;
   }
   return json({ ok: true, id });

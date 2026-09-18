@@ -64,11 +64,20 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   await page.getByRole("button", { name: "行程", exact: true }).click();
   await page.getByRole("button", { name: /第 1 天/ }).click();
   await page
-    .getByRole("button", { name: /城市间航班.*查看详情与凭证/ })
+    .getByRole("button", { name: /城市间航班.*查看详情与资料/ })
     .click();
-  await page.getByRole("button", { name: "修改事项", exact: true }).click();
-  for (let i = 0; i < 3; i++)
-    await page.getByRole("button", { name: "下一步", exact: true }).click();
+  await page.getByRole("button", { name: "关联资料", exact: true }).click();
+  await expect(
+    page.getByRole("group", { name: "关联资料", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "保存修改", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "下一步", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "上一步", exact: true }).click();
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await page.getByLabel("测试机票.png", { exact: true }).check();
   await page.getByRole("button", { name: "保存修改" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -86,7 +95,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   await page.getByRole("button", { name: "新增支出" }).click();
   await page.getByLabel("金额", { exact: true }).fill("123.45");
   await page.getByLabel("支出名称", { exact: true }).fill("午餐");
-  await page.getByLabel("上传支出凭证").setInputFiles({
+  await page.getByLabel("上传支出资料").setInputFiles({
     name: "餐费凭证.png",
     mimeType: "image/png",
     buffer: png,

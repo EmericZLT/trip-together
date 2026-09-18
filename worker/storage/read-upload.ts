@@ -7,14 +7,14 @@ export async function readUpload(request: Request) {
     throw new HttpError(415, "支持 JPG、PNG、WebP 或 PDF 文件");
   let name: string;
   try {
-    name = decodeURIComponent(request.headers.get("x-file-name") || "凭证");
+    name = decodeURIComponent(request.headers.get("x-file-name") || "资料");
   } catch {
     throw new HttpError(400, "文件名无效");
   }
   if (!name.trim() || name.length > 180 || /[\r\n]/.test(name))
     throw new HttpError(400, "文件名无效或过长");
   if (Number(request.headers.get("content-length")) > LIMIT)
-    throw new HttpError(413, "每份凭证不能超过 10 MB");
+    throw new HttpError(413, "每份资料不能超过 10 MB");
   const reader = request.body?.getReader();
   if (!reader) throw new HttpError(400, "请选择文件");
   const chunks: Uint8Array[] = [];
@@ -25,7 +25,7 @@ export async function readUpload(request: Request) {
     size += part.value.length;
     if (size > LIMIT) {
       await reader.cancel();
-      throw new HttpError(413, "每份凭证不能超过 10 MB");
+      throw new HttpError(413, "每份资料不能超过 10 MB");
     }
     chunks.push(part.value);
   }

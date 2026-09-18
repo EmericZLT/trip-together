@@ -43,7 +43,7 @@ export function useReceipts(existing: Receipt[]) {
   }
   function add(selected: File[]) {
     if (items.current.length + selected.length > 5)
-      throw new Error("最多上传 5 份凭证");
+      throw new Error("最多上传 5 份资料");
     validateFiles(selected, true);
     const added = selected.map((file) => {
       const url = URL.createObjectURL(file);
@@ -75,7 +75,7 @@ export function useReceipts(existing: Receipt[]) {
   async function upload() {
     await Promise.all([...running.current.values()]);
     if (items.current.some((item) => item.status !== "ready"))
-      throw new Error("请先重试上传失败的凭证，或移除后保存");
+      throw new Error("请先重试上传失败的资料，或移除后保存");
     return items.current.map((item) => item.id);
   }
   async function cleanup() {

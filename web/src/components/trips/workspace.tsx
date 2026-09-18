@@ -42,7 +42,10 @@ export function TripWorkspace({
   const [doc, setDoc] = useState<TripDocument | null>(null),
     [event, setEvent] = useState<TripEvent | null>(null),
     [offline, setOffline] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<TripEvent | null>(null),
+  const [editingEvent, setEditingEvent] = useState<{
+      event: TripEvent;
+      step: 1 | 4;
+    } | null>(null),
     [deletingEvent, setDeletingEvent] = useState<TripEvent | null>(null),
     [deleting, setDeleting] = useState(false);
   const displayNow = preview ? preview.time + (now - preview.startedAt) : now;
@@ -204,9 +207,9 @@ export function TripWorkspace({
       <EventDetail
         event={event}
         data={data}
-        onEdit={(e) => {
+        onEdit={(e, step = 1) => {
           setEvent(null);
-          setEditingEvent(e);
+          setEditingEvent({ event: e, step });
         }}
         onDelete={(e) => {
           setEvent(null);
@@ -220,7 +223,8 @@ export function TripWorkspace({
       />
       {editingEvent && (
         <EventEditor
-          event={editingEvent}
+          event={editingEvent.event}
+          initialStep={editingEvent.step}
           data={data}
           onClose={() => setEditingEvent(null)}
           onSaved={refresh}

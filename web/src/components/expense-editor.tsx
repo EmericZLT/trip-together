@@ -248,7 +248,7 @@ export function ExpenseEditor({
             disabled={busy || receipts.uploading}
           >
             {receipts.uploading ? (
-              <>凭证上传中…</>
+              <>资料上传中…</>
             ) : busy ? (
               <LoaderCircle className="animate-spin" size={18} />
             ) : (

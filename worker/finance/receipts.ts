@@ -7,7 +7,7 @@ export async function uploadReceipt(
   tripId: string,
   id: string,
 ) {
-  if (!/^[0-9a-f-]{36}$/.test(id)) throw new HttpError(400, "凭证编号无效");
+  if (!/^[0-9a-f-]{36}$/.test(id)) throw new HttpError(400, "资料编号无效");
   const existing = await env.DB.prepare(
     "SELECT id,uploaded_by,trip_id FROM receipts WHERE id=?",
   )
@@ -15,7 +15,7 @@ export async function uploadReceipt(
     .first<{ id: string; uploaded_by: string; trip_id: string }>();
   if (existing) {
     if (existing.uploaded_by !== memberId || existing.trip_id !== tripId)
-      throw new HttpError(409, "凭证编号冲突");
+      throw new HttpError(409, "资料编号冲突");
     return json({ id });
   }
   const { bytes, name, mime, size } = await readUpload(request);

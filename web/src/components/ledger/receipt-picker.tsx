@@ -22,7 +22,7 @@ export function ReceiptPicker({
         type="file"
         multiple
         accept="image/jpeg,image/png,image/webp,application/pdf"
-        aria-label="上传支出凭证"
+        aria-label="上传支出资料"
         disabled={disabled}
         onChange={(e) => {
           try {
@@ -35,7 +35,7 @@ export function ReceiptPicker({
         }}
       />
       <div className="receipt-caption">
-        <span>凭证</span>
+        <span>资料</span>
         <small>图片 / PDF · 单份 ≤10 MB</small>
       </div>
       <FileTiles
@@ -50,8 +50,8 @@ export function ReceiptPicker({
           <button
             type="button"
             className="file-tile-preview receipt-add"
-            aria-label="添加凭证"
-            title="添加凭证"
+            aria-label="添加资料"
+            title="添加资料"
             disabled={disabled}
             onClick={() => input.current?.click()}
           >

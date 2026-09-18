@@ -169,7 +169,7 @@ export function Itinerary({
                   <h3>{e.title}</h3>
                   <p>{e.subtitle}</p>
                   <span className="timeline-link">
-                    查看详情与凭证
+                    查看详情与资料
                     <ArrowUpRight size={15} />
                   </span>
                 </div>
@@ -205,7 +205,7 @@ export function EventDetail({
   data: TripData;
   onClose: () => void;
   onDocument: (d: TripDocument) => void;
-  onEdit: (e: TripEvent) => void;
+  onEdit: (e: TripEvent, step?: 1 | 4) => void;
   onDelete: (e: TripEvent) => void;
 }) {
   if (!event) return null;
@@ -301,7 +301,7 @@ export function EventDetail({
             <p>{event.note}</p>
           </div>
         )}
-        <SectionTitle>相关凭证</SectionTitle>
+        <SectionTitle>相关资料</SectionTitle>
         {docs.length ? (
           <div className="surface divided">
             {docs.map((d) => (
@@ -310,10 +310,10 @@ export function EventDetail({
           </div>
         ) : (
           <div className="surface empty-state">
-            <h3>尚未关联凭证</h3>
+            <h3>尚未关联资料</h3>
             <p>可以直接上传图片、订单或关联已有资料。</p>
-            <button className="text-action" onClick={() => onEdit(event)}>
-              关联凭证
+            <button className="text-action" onClick={() => onEdit(event, 4)}>
+              关联资料
             </button>
           </div>
         )}
