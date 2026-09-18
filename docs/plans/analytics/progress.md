@@ -32,7 +32,7 @@
 - [x] 看板方案、配置脚本与文档更新
 - [x] 类型检查和 4 项统计测试通过
 - [x] 发布生产配置、Secret 与增量迁移
-- [ ] 核验首次生产定时发送
+- [x] 核验首次生产定时发送（修复后成功）
 - [ ] 在 OpenPanel 创建私有看板并读回验证
 
 ## 核心决策
@@ -75,7 +75,7 @@
 - [x] 应用 0006 增量迁移并发布生产，启用每 5 分钟 Cron
 - [x] 首页、认证配置、埋点启用检查通过；统计无令牌 403、业务未登录 401
 - [x] 发布前后历史业务数量一致；本地埋点仍关闭
-- [ ] 首次 Cron 的 integration_check 探针确认成功
+- [x] 首次 Cron 的 integration_check 探针确认成功
 - [x] 提交发布记录，随通用版同步 GitHub main
 
 上述“未部署”描述属于实施阶段记录；截至本节，生产已经发布。探针只写入分析队列，使用匿名测试身份，不创建账号或修改旅行数据。私密配置与备份保持在 Git 忽略目录。
@@ -86,5 +86,9 @@
 
 - [x] 确认登录事件写入，历史队列尚未发送且 HTTP 状态为 0
 - [x] 增加无凭据、无个人信息的发送阶段与异常类型日志
-- [ ] 确认根因并修复生产发送
-- [ ] 核验历史队列发送成功并同步 GitHub
+- [x] 确认根因并修复生产发送
+- [x] 核验历史队列发送成功并同步 GitHub
+
+Production verification: 2026-09-18 07:00 UTC cron successfully drained pending events (failed=0). D1 confirmed HTTP 200 and delivered_at for login, page, activity and integration-check events. Previous pending-delivery notes are historical; dashboard configuration and report read-back remain pending.
+
+Root cause: workerd Request rejects redirect:error before any outbound request. Use manual and reject non-2xx without forwarding credentials. Added actual workerd request construction and 302 rejection tests plus safe error-stage logs. Full verification passed: typecheck, build, 30 tests, 11 Chromium and 11 WebKit flows. No authentication or travel business data changed.
