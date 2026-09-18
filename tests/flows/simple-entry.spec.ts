@@ -1,3 +1,4 @@
+import { chooseTime, chooseZone } from "../support/event-controls";
 import { test, expect } from "@playwright/test";
 import { Client, createTrip, png } from "../support/api";
 async function login(page: import("@playwright/test").Page, account: Client) {
@@ -216,29 +217,11 @@ test("目的地搜索、多城市保存和跨时区航班时间", async ({
   await page.getByRole("button", { name: "航班", exact: true }).click();
   await page.getByLabel("事项名称", { exact: true }).fill("上海 → 东京");
   await page.getByRole("button", { name: "下一步", exact: true }).click();
-  await page.getByLabel("起飞时间", { exact: true }).fill("09:00");
-  await page.getByLabel("起飞时间", { exact: true }).press("Tab");
+  await chooseTime(page, "起飞时间", "09", "00");
   await page.getByRole("switch", { name: "时间段" }).click();
-  await page.getByLabel("落地时间", { exact: true }).fill("12:00");
-  await page.getByLabel("落地时间", { exact: true }).press("Tab");
-  await page.getByRole("combobox", { name: "当地时间", exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "当地时间", exact: true })
-    .fill("北京");
-  await page
-    .locator(".ant-select-dropdown:visible .ant-select-item-option")
-    .filter({ hasText: "北京 · 中国" })
-    .click();
-  await page
-    .getByRole("combobox", { name: "到达地当地时间", exact: true })
-    .click();
-  await page
-    .getByRole("combobox", { name: "到达地当地时间", exact: true })
-    .fill("东京");
-  await page
-    .locator(".ant-select-dropdown:visible .ant-select-item-option")
-    .filter({ hasText: "东京 · 日本" })
-    .click();
+  await chooseTime(page, "落地时间", "12", "00");
+  await chooseZone(page, "当地时间", "北京 · 中国");
+  await chooseZone(page, "到达地当地时间", "东京 · 日本");
   for (let i = 0; i < 2; i++)
     await page.getByRole("button", { name: "下一步", exact: true }).click();
   await page.getByRole("button", { name: "添加航班", exact: true }).click();

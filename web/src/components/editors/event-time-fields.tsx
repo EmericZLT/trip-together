@@ -98,6 +98,7 @@ export function EventTimeFields({
             id={`${id}-${end}`}
             aria-label={label}
             format="HH:mm"
+            inputReadOnly
             minuteStep={1}
             needConfirm={false}
             showNow={false}
@@ -113,7 +114,7 @@ export function EventTimeFields({
           <Select
             id={`${id}-zone-${end}`}
             aria-label={zoneLabel}
-            showSearch={{ optionFilterProp: "label" }}
+            showSearch={false}
             value={end ? v.endTimezone : v.timezone}
             options={zones}
             onChange={(zone) =>

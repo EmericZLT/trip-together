@@ -1,3 +1,4 @@
+import { chooseTime, chooseZone } from "../support/event-controls";
 import { test, expect } from "@playwright/test";
 import { Client, createTrip, png } from "../support/api";
 const paris = {
@@ -41,46 +42,14 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   const next = () =>
     page.getByRole("button", { name: "下一步", exact: true }).click();
   await next();
-  await page.getByLabel("开始时间", { exact: true }).click();
-  const picker = page.locator(".ant-picker-dropdown:visible");
-  await expect(picker).toBeVisible();
-  await picker
-    .locator(".ant-picker-time-panel-column")
-    .nth(0)
-    .getByText("09", { exact: true })
-    .click();
-  await picker
-    .locator(".ant-picker-time-panel-column")
-    .nth(1)
-    .getByText("17", { exact: true })
-    .click();
-  await page.getByLabel("开始时间", { exact: true }).press("Tab");
+  await chooseTime(page, "开始时间", "09", "17");
   await page.getByRole("switch", { name: "时间段", exact: true }).click();
-  await page.getByLabel("结束时间", { exact: true }).fill("10:42");
-  await page.getByLabel("结束时间", { exact: true }).press("Tab");
-  const dialog = page.getByRole("dialog"),
-    height = (await dialog.boundingBox())!.height;
-  const timezone = page.getByRole("combobox", {
-    name: "当地时间",
-    exact: true,
-  });
-  await timezone.click();
+  await chooseTime(page, "结束时间", "10", "42");
+  const dialog = page.getByRole("dialog");
+  const height = (await dialog.boundingBox())!.height;
+  await chooseZone(page, "当地时间", "北京 · 中国");
   expect((await dialog.boundingBox())!.height).toBeCloseTo(height, 0);
-  await timezone.fill("北京");
-  await page
-    .locator(".ant-select-dropdown:visible .ant-select-item-option")
-    .filter({ hasText: "北京 · 中国" })
-    .click();
-  await page
-    .getByRole("combobox", { name: "到达地当地时间", exact: true })
-    .click();
-  await page
-    .getByRole("combobox", { name: "到达地当地时间", exact: true })
-    .fill("北京");
-  await page
-    .locator(".ant-select-dropdown:visible .ant-select-item-option")
-    .filter({ hasText: "北京 · 中国" })
-    .click();
+  await chooseZone(page, "到达地当地时间", "北京 · 中国");
   await page.screenshot({ path: `.local/wizard-time-${browserName}.png` });
   await page.getByRole("switch", { name: "时间段", exact: true }).click();
   await page.getByRole("switch", { name: "时间段", exact: true }).click();
