@@ -2,12 +2,11 @@
 import { MemberSelect } from "./members/member-select";
 import { Avatar } from "./avatar";
 import { useState } from "react";
-import { LoaderCircle, Check, Trash2 } from "lucide-react";
+import { LoaderCircle, Check, Trash2, ArrowRightLeft } from "lucide-react";
 import type { Expense, TripData, Currency } from "@/lib/models";
 import { ReceiptPicker, useReceipts } from "./ledger/receipt-picker";
 import { localDate, selectEvents } from "@/lib/time";
-import { CurrencyField } from "./editors/fields";
-import { money, splitAmount } from "@/lib/money";
+import { currencyLabel, money, splitAmount } from "@/lib/money";
 import { api } from "@/lib/api";
 import { Sheet } from "./ui";
 export function ExpenseEditor({
@@ -128,11 +127,24 @@ export function ExpenseEditor({
               placeholder="0.00"
             />
           </label>
-          <CurrencyField
-            label="币种"
-            value={currency}
-            onChange={(v) => setCurrency(v as Currency)}
-          />
+          <button
+            type="button"
+            className="expense-currency-choice"
+            disabled={busy || data.trip.currency === data.trip.home_currency}
+            aria-label={`当前币种：${currencyLabel(currency)}${data.trip.currency !== data.trip.home_currency ? `，切换为${currencyLabel(currency === data.trip.currency ? data.trip.home_currency : data.trip.currency)}` : ""}`}
+            onClick={() =>
+              setCurrency(
+                currency === data.trip.currency
+                  ? data.trip.home_currency
+                  : data.trip.currency,
+              )
+            }
+          >
+            {currencyLabel(currency)}
+            {data.trip.currency !== data.trip.home_currency && (
+              <ArrowRightLeft size={15} aria-hidden="true" />
+            )}
+          </button>
         </div>
         <label>
           支出名称

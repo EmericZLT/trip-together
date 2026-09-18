@@ -120,3 +120,18 @@
 .receipt-picker {
   margin-bottom: 16px;
 }
+.expense-currency-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--color-primary-100);
+  color: var(--accent);
+  font-size: 14px;
+}
+.expense-currency-choice:disabled {
+  opacity: 1;
+  cursor: default;
+}

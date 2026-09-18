@@ -148,13 +148,21 @@ test("新增目的地与币种采用中文；失败重试不重复上传成功�
   ).toBe(true);
   await page.getByRole("button", { name: "账本", exact: true }).click();
   await page.getByRole("button", { name: "新增支出" }).click();
-  await page.getByRole("button", { name: "币种", exact: true }).click();
-  await page.getByLabel("搜索币种").fill("泰铢");
-  await page.getByRole("button", { name: "泰铢", exact: true }).click();
+  const switchCurrency = page.getByRole("button", {
+    name: "当前币种：欧元，切换为人民币",
+    exact: true,
+  });
+  await expect(switchCurrency).toBeVisible();
+  await switchCurrency.click();
+  await page
+    .getByRole("button", { name: "当前币种：人民币，切换为欧元", exact: true })
+    .click();
+  await expect(switchCurrency).toBeVisible();
+  await expect(page.getByLabel("搜索币种")).toHaveCount(0);
   await page.getByLabel("金额", { exact: true }).fill("300");
   await page.getByLabel("支出名称", { exact: true }).fill("午餐");
   await page.getByRole("button", { name: "保存支出", exact: true }).click();
-  await page.getByRole("button", { name: "泰铢", exact: true }).click();
+  await page.getByRole("button", { name: "欧元", exact: true }).click();
   await expect(page.getByText("午餐", { exact: true })).toBeVisible();
 });
 test("目的地搜索、多城市保存和跨时区航班时间", async ({
