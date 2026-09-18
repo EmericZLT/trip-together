@@ -1,17 +1,32 @@
 "use client";
-import { Check, FileText } from "lucide-react";
+import { Check, FileText, Plus } from "lucide-react";
 import type { TripDocument } from "@/lib/models";
 export function DocumentChoices({
   documents,
   selected,
   onChange,
+  onUpload,
 }: {
+  onUpload?: () => void;
   documents: TripDocument[];
   selected: string[];
   onChange: (ids: string[]) => void;
 }) {
   return (
     <div className="document-choice-grid" role="group" aria-label="关联资料">
+      {onUpload && (
+        <button
+          type="button"
+          className="document-choice document-upload-choice"
+          aria-label="上传并关联资料"
+          onClick={onUpload}
+        >
+          <span className="document-choice-image">
+            <Plus size={28} />
+          </span>
+          <span className="document-choice-name">上传资料</span>
+        </button>
+      )}
       {documents.map((doc) => {
         const checked = selected.includes(doc.id);
         return (

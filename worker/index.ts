@@ -1,3 +1,4 @@
+import { searchPlaces } from "./places/search";
 import { sendCode, verificationRequired } from "./security/email";
 import { HttpError, json, sameOrigin, secure } from "./http";
 import {
@@ -48,6 +49,8 @@ export default {
       let r: Response;
       if (path === "/api/bootstrap" && method === "GET")
         r = await bootstrap(env, memberId);
+      else if (path === "/api/places" && method === "GET")
+        r = await searchPlaces(request, env, memberId);
       else if (path === "/api/logout" && method === "POST")
         r = await logout(request, env);
       else if (path === "/api/profile" && method === "PUT")

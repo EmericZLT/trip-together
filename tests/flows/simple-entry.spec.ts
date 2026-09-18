@@ -16,19 +16,14 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
   await page.getByRole("button", { name: "行程", exact: true }).click();
   await page.getByRole("button", { name: /第 2 天/ }).click();
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
-  await expect(page.getByLabel("活动名称")).toHaveCount(0);
   await page.screenshot({ path: `.local/event-step-one-${browserName}.png` });
+  await page.getByLabel("活动名称").fill("公园散步");
   await page.getByRole("button", { name: "下一步", exact: true }).click();
   await expect(page.getByLabel("日期", { exact: true })).toHaveValue(
     "2030-06-02",
   );
-  await expect(page.getByLabel("活动名称")).toBeVisible();
-  await expect(page.getByLabel("开始时间", { exact: true })).toHaveCount(0);
-  await expect(page.getByLabel("出发地", { exact: true })).toHaveCount(0);
-  await page.getByLabel("活动名称").fill("公园散步");
+  await expect(page.getByLabel("开始时间", { exact: true })).toHaveValue("");
   await page.getByRole("button", { name: "上一步", exact: true }).click();
-  await expect(page.getByLabel("活动名称")).toHaveCount(0);
-  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await expect(page.getByLabel("活动名称")).toHaveValue("公园散步");
   await page.getByRole("button", { name: "关闭", exact: true }).click();
   await expect(
@@ -47,14 +42,9 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
   await page.setViewportSize({ width: 390, height: 844 });
   const compactBox = await page.getByRole("dialog").boundingBox();
   expect(compactBox!.height).toBeLessThan(650);
-  const moreBox = await page
-    .getByText("更多信息（选填）", { exact: true })
-    .boundingBox();
-  const uploadBox = await page
-    .getByRole("button", { name: "＋ 添加图片或文件", exact: true })
-    .boundingBox();
-  expect(Math.abs(moreBox!.y - uploadBox!.y)).toBeLessThan(8);
   await page.screenshot({ path: `.local/simple-event-${browserName}.png` });
+  for (let i = 0; i < 3; i++)
+    await page.getByRole("button", { name: "下一步", exact: true }).click();
   await page.getByRole("button", { name: "添加活动", exact: true }).click();
   await expect(
     page.getByRole("button", { name: /公园散步.*查看详情/ }),
@@ -63,11 +53,13 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
   expect(data.events[0].timeMode).toBe("date");
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
   await page.getByRole("button", { name: "住宿", exact: true }).click();
-  await page.getByRole("button", { name: "下一步", exact: true }).click();
-  await expect(page.getByLabel("出发地", { exact: true })).toHaveCount(0);
   await page.getByLabel("酒店名称").fill("湖边酒店");
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
+  await page.getByRole("switch", { name: "时间段" }).click();
   await page.getByLabel("退房日期").fill("2030-06-04");
-  await page.getByRole("button", { name: "＋ 添加住宿订单" }).click();
+  for (let i = 0; i < 2; i++)
+    await page.getByRole("button", { name: "下一步", exact: true }).click();
+  await page.getByRole("button", { name: "上传并关联资料" }).click();
   await page.getByLabel("选择照片或文件").setInputFiles([
     { name: "酒店订单.png", mimeType: "image/png", buffer: png },
     { name: "入住说明.png", mimeType: "image/png", buffer: png },
@@ -222,18 +214,33 @@ test("目的地搜索、多城市保存和跨时区航班时间", async ({
   await page.getByRole("button", { name: "行程", exact: true }).click();
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
   await page.getByRole("button", { name: "航班", exact: true }).click();
+  await page.getByLabel("事项名称", { exact: true }).fill("上海 → 东京");
   await page.getByRole("button", { name: "下一步", exact: true }).click();
-  await page.getByLabel("出发地", { exact: true }).fill("上海");
-  await page.getByLabel("目的地", { exact: true }).fill("东京");
-  await page.getByLabel("已知起飞和落地时间").check();
   await page.getByLabel("起飞时间", { exact: true }).fill("09:00");
+  await page.getByLabel("起飞时间", { exact: true }).press("Tab");
+  await page.getByRole("switch", { name: "时间段" }).click();
   await page.getByLabel("落地时间", { exact: true }).fill("12:00");
-  await page.getByText("出发地与到达地当地时间", { exact: true }).click();
+  await page.getByLabel("落地时间", { exact: true }).press("Tab");
+  await page.getByRole("combobox", { name: "当地时间", exact: true }).click();
   await page
-    .getByRole("button", { name: "出发地当地时间", exact: true })
+    .getByRole("combobox", { name: "当地时间", exact: true })
+    .fill("北京");
+  await page
+    .locator(".ant-select-dropdown:visible .ant-select-item-option")
+    .filter({ hasText: "北京 · 中国" })
     .click();
-  await page.getByLabel("搜索出发地当地时间").fill("北京");
-  await page.getByRole("button", { name: "北京 · 中国", exact: true }).click();
+  await page
+    .getByRole("combobox", { name: "到达地当地时间", exact: true })
+    .click();
+  await page
+    .getByRole("combobox", { name: "到达地当地时间", exact: true })
+    .fill("东京");
+  await page
+    .locator(".ant-select-dropdown:visible .ant-select-item-option")
+    .filter({ hasText: "东京 · 日本" })
+    .click();
+  for (let i = 0; i < 2; i++)
+    await page.getByRole("button", { name: "下一步", exact: true }).click();
   await page.getByRole("button", { name: "添加航班", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const event = (await account.request(`/trips/${trip.id}/data`)).events[0];

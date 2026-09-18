@@ -1,4 +1,5 @@
 "use client";
+import { mapLink } from "../../../../shared/places";
 import { useState } from "react";
 import {
   Plus,
@@ -247,11 +248,17 @@ export function EventDetail({
             </small>
           </span>
         </div>
-        {(event.kind === "flight" || event.kind === "stay") && (
+        {(event.timeRange === true ||
+          (event.timeRange === undefined &&
+            (event.kind === "flight" || event.kind === "stay"))) && (
           <div className="detail-row">
             <Clock3 size={19} />
             <span>
-              {event.kind === "stay" ? "退房：" : "抵达："}
+              {event.kind === "stay"
+                ? "退房："
+                : event.kind === "flight"
+                  ? "抵达："
+                  : "结束："}
               {eventEndDate(event)}
               <small>
                 {eventTime(event, true)} ·{" "}
@@ -267,14 +274,18 @@ export function EventDetail({
             <small>{event.address}</small>
           </span>
         </div>
-        {event.address && (
+        {(event.location || event.address) && (
           <a
             className="secondary-button w-full"
             target="_blank"
             rel="noreferrer"
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`}
+            href={
+              event.location
+                ? mapLink(event.location)
+                : `https://maps.apple.com/?q=${encodeURIComponent(event.address ?? "")}`
+            }
           >
-            地图导航
+            {event.location ? "打开地图导航" : "在地图中搜索"}
             <ArrowUpRight size={16} />
           </a>
         )}

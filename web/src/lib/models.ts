@@ -1,3 +1,4 @@
+import type { Place } from "../../../shared/places";
 import type { Destination } from "../../../shared/travel-options";
 export type { Currency } from "../../../shared/travel-options";
 import type { Currency } from "../../../shared/travel-options";
@@ -41,6 +42,7 @@ export type Profile = Member & {
 };
 export type TripEvent = {
   dateEnd?: string;
+  timeRange?: boolean;
   timeMode?: "timed" | "date";
   endUnspecified?: boolean;
   version: number;
@@ -55,6 +57,8 @@ export type TripEvent = {
   certainty: "confirmed" | "suggested";
   place: string;
   address?: string;
+  location?: Place | null;
+  departureLocation?: Place | null;
   phone?: string;
   source: string;
   note: string;

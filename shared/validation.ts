@@ -1,3 +1,4 @@
+import { placeSchema } from "./places";
 import { z } from "zod";
 import { currencies } from "./travel-options";
 export { currencies } from "./travel-options";
@@ -49,6 +50,7 @@ export const eventSchema = z
     subtitle: z.string().max(250).default(""),
     kind: z.enum(["flight", "drive", "stay", "explore", "transfer"]),
     dateEnd: dateSchema.optional(),
+    timeRange: z.boolean().optional(),
     timeMode: z.enum(["timed", "date"]).default("timed"),
     endUnspecified: z.boolean().default(false),
     start: z.iso.datetime({ offset: true }),
@@ -58,6 +60,8 @@ export const eventSchema = z
     certainty: z.enum(["confirmed", "suggested"]),
     place: z.string().max(150).default(""),
     address: z.string().max(500).default(""),
+    location: placeSchema.nullable().optional(),
+    departureLocation: placeSchema.nullable().optional(),
     phone: z.string().max(80).default(""),
     source: z.string().max(500).default(""),
     note: z.string().max(3000).default(""),

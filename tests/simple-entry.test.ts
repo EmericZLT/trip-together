@@ -52,3 +52,33 @@ test("多个目的地、日元泰铢持久保存，日期事项与未知结束�
   );
   assert.match(money(split[0], "JPY"), /33\.34/);
 });
+
+test("地点搜索需要登录；选择的坐标持久保存并校验边界", async () => {
+  await new Client().request("/places?q=Paris", "GET", undefined, 401);
+  const c = await new Client().register();
+  await c.request("/places?q=x", "GET", undefined, 400);
+  const { id } = await c.request("/trips", "POST", tripInput, 201);
+  const location = {
+    id: "test-location",
+    name: "测试景点",
+    address: "Paris, France",
+    latitude: 48.85,
+    longitude: 2.29,
+    countryCode: "fr",
+    provider: "geoapify",
+  };
+  await c.request(`/trips/${id}/events`, "POST", {
+    ...eventInput,
+    timeRange: true,
+    location,
+  });
+  const data = await c.request(`/trips/${id}/data`);
+  assert.deepEqual(data.events[0].location, location);
+  assert.equal(data.events[0].timeRange, true);
+  await c.request(
+    `/trips/${id}/events`,
+    "POST",
+    { ...eventInput, location: { ...location, latitude: 99 } },
+    400,
+  );
+});

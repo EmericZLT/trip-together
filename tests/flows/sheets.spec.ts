@@ -13,19 +13,17 @@ test("短弹窗自然高度、长表单只滚动内容、底部按钮关联原�
   await page.getByRole("button", { name: "行程", exact: true }).click();
   await page.getByRole("button", { name: "添加事项", exact: true }).click();
   const dialog = page.getByRole("dialog");
-  expect((await dialog.boundingBox())!.height).toBeLessThan(400);
+  expect((await dialog.boundingBox())!.height).toBeLessThan(450);
   await expect(
     dialog.locator(".sheet-footer").getByRole("button", { name: "下一步" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "下一步" }).click();
-  await page.setViewportSize({ width: 390, height: 600 });
-  await page.getByText("更多信息（选填）", { exact: true }).click();
-  await page.getByLabel("填写具体时间").check();
+  await page.setViewportSize({ width: 390, height: 400 });
+  await page.getByText("补充说明（选填）", { exact: true }).click();
   const body = dialog.locator(".sheet-body");
   expect(await body.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(
     true,
   );
-  const save = dialog.getByRole("button", { name: "添加活动", exact: true });
+  const save = dialog.getByRole("button", { name: "下一步", exact: true });
   const before = await save.boundingBox();
   await body.evaluate((el) => {
     el.scrollTop = el.scrollHeight;

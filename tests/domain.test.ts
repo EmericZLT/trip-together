@@ -73,3 +73,57 @@ test("日期事项不产生虚假倒计时或提前结束，未知结束时间�
   assert.equal(selectEvents([partial], noon).featured?.id, "date");
   assert.equal(selectEvents([partial], noon).current, undefined);
 });
+
+test("事项时间支持分钟、单点、跨日跨区时间段及待定日期", async () => {
+  const { resolveTiming } =
+    await import("../web/src/components/editors/event/timing");
+  const base = {
+    date: "2030-06-01",
+    endDate: "2030-06-02",
+    startTime: "23:47",
+    endTime: "03:12",
+    timezone: "Asia/Shanghai",
+    endTimezone: "Asia/Tokyo",
+    timeMode: "timed" as const,
+    range: false,
+    firstChoice: "",
+    lastChoice: "",
+  };
+  const single = resolveTiming(base, "explore");
+  assert.equal(single.start, "2030-06-01T15:47:00.000Z");
+  assert.equal(single.endUnspecified, true);
+  assert.equal(single.endTimezone, "Asia/Shanghai");
+  assert.equal(single.dateEnd, "2030-06-01");
+  const range = resolveTiming({ ...base, range: true }, "flight");
+  assert.equal(range.end, "2030-06-01T18:12:00.000Z");
+  assert.equal(range.endUnspecified, false);
+  assert.throws(
+    () => resolveTiming({ ...base, range: true, endTime: "" }, "flight"),
+    /结束时间/,
+  );
+  assert.throws(
+    () => resolveTiming({ ...base, range: true, endDate: base.date }, "flight"),
+    /晚于/,
+  );
+  const dated = resolveTiming(
+    { ...base, startTime: "", endTime: "", timeMode: "date", range: true },
+    "stay",
+  );
+  assert.equal(dated.end, "2030-06-01T15:00:00.000Z");
+});
+test("地点坐标验证与导航保持 WGS84 坐标顺序", async () => {
+  const { placeSchema, mapLink } = await import("../shared/places");
+  const p = {
+    id: "test",
+    name: "测试地点",
+    address: "Paris",
+    latitude: 48.85,
+    longitude: 2.29,
+    provider: "geoapify",
+  };
+  assert.equal(placeSchema.safeParse({ ...p, latitude: 91 }).success, false);
+  assert.equal(
+    new URL(mapLink(placeSchema.parse(p))).searchParams.get("daddr"),
+    "48.85,2.29",
+  );
+});
