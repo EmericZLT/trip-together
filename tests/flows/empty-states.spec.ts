@@ -19,6 +19,15 @@ test("空白行程的账本、资料、准备清单没有空白细条", async ({
     await page.getByRole("button", { name: tab, exact: true }).click();
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
     await expect(page.locator(".surface.divided:empty")).toHaveCount(0);
+    if (tab === "行程") {
+      const card = await page
+        .locator(".preparation-checklist > .empty-state")
+        .boundingBox();
+      const add = await page
+        .getByRole("button", { name: "添加准备事项", exact: true })
+        .boundingBox();
+      expect(add!.y - card!.y - card!.height).toBeGreaterThanOrEqual(16);
+    }
     await expect(page.getByText(/待核对.*预订/)).toHaveCount(0);
     for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 844 });

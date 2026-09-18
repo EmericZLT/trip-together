@@ -306,17 +306,24 @@ export function EventEditor({
               </div>
             </div>
             {docs.length > 0 && (
-              <details className="optional-details" open={documents.length > 0}>
-                <summary>
-                  关联资料
-                  {documents.length ? `（已选 ${documents.length} 份）` : ""}
-                </summary>
+              <section
+                className="event-document-section"
+                aria-label="关联资料选择"
+              >
+                <h3>
+                  关联资料{" "}
+                  <small>
+                    {documents.length
+                      ? `已选 ${documents.length} 份`
+                      : "点击图片选择"}
+                  </small>
+                </h3>
                 <DocumentChoices
                   documents={docs}
                   selected={documents}
                   onChange={setDocuments}
                 />
-              </details>
+              </section>
             )}
             {error && (
               <p role="alert" className="error-message">

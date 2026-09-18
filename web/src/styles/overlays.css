@@ -214,3 +214,11 @@
     backdrop-filter: none;
   }
 }
+
+/* Header and form padding must not add up to an empty band. */
+.sheet:has(> .sheet-body > form) .sheet-header {
+  padding: 12px 18px 6px;
+}
+.sheet > .sheet-body > .editor-form {
+  padding-top: 8px;
+}

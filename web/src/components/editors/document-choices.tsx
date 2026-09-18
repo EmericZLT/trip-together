@@ -31,11 +31,15 @@ export function DocumentChoices({
             }
           >
             <span className="document-choice-image">
-              {doc.mime.startsWith("image/") ? (
-                <img src={`/api/files/${doc.id}`} alt="" loading="lazy" />
-              ) : (
-                <FileText size={30} />
-              )}
+              <span
+                className={`file-icon ${doc.mime.startsWith("image/") ? "file-thumbnail" : ""}`}
+              >
+                {doc.mime.startsWith("image/") ? (
+                  <img src={`/api/files/${doc.id}`} alt="" loading="lazy" />
+                ) : (
+                  <FileText size={30} />
+                )}
+              </span>
               <span className="document-choice-check">
                 {checked && <Check size={14} />}
               </span>

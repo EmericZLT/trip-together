@@ -79,6 +79,20 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
     name: "酒店订单.png",
     exact: true,
   });
+  await expect(tile.locator(".file-icon")).toHaveCSS("border-top-width", "3px");
+  expect(
+    await tile
+      .locator(".file-icon")
+      .evaluate((el) => getComputedStyle(el).transform),
+  ).not.toBe("none");
+  await expect(page.locator(".event-document-section")).toBeVisible();
+  const fixedHeight = await page.getByRole("dialog").boundingBox();
+  expect(fixedHeight!.height).toBeCloseTo(640, 0);
+  expect(
+    await page
+      .locator(".event-entry-sheet > .sheet-body")
+      .evaluate((el) => getComputedStyle(el).overflowY),
+  ).toBe("auto");
   await expect(tile.locator("img")).toHaveAttribute("src", /\/api\/files\//);
   await tile.click();
   await expect(tile).not.toBeChecked();

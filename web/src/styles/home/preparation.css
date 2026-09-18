@@ -86,3 +86,7 @@
 .preparation-group:last-of-type {
   margin-bottom: 18px;
 }
+
+.preparation-checklist > .empty-state {
+  margin-bottom: 18px;
+}

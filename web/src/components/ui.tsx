@@ -140,7 +140,9 @@ export function Sheet({
               </div>
             </div>
           )}
-          <div hidden={discard}>{children}</div>
+          <div className="sheet-body" hidden={discard}>
+            {children}
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

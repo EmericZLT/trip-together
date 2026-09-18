@@ -133,8 +133,7 @@
 .compact-event .document-choice-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  max-height: 210px;
-  overflow-y: auto;
+  overflow: visible;
   padding: 10px 3px 3px;
 }
 .compact-event .document-choice-image {
@@ -166,4 +165,70 @@
   .compact-event .event-zone-settings {
     font-size: 10px;
   }
+}
+
+.event-entry-sheet {
+  height: min(640px, 86dvh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.event-entry-sheet .sheet-handle,
+.event-entry-sheet .sheet-header {
+  flex-shrink: 0;
+}
+.event-entry-sheet > .sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.event-entry-sheet > .sheet-body > .editor-form {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.event-entry-sheet .entry-step-actions {
+  margin-top: auto;
+  padding-bottom: 4px;
+}
+.event-entry-sheet:not(.compact-event) .editor-form > .primary-button {
+  margin-top: auto;
+}
+.event-document-section h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+}
+.event-document-section h3 small {
+  font-size: 11px;
+  font-weight: 400;
+}
+.document-choice-grid .document-choice-image {
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  padding: 5px;
+}
+.document-choice-grid .document-choice-image > .file-icon {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+}
+.document-choice-grid
+  .document-choice[aria-checked="true"]
+  .document-choice-image {
+  box-shadow: none;
+  border: 0;
+}
+.document-choice-grid .document-choice[aria-checked="true"] .file-icon {
+  box-shadow:
+    0 0 0 2px #9685b0,
+    0 3px 8px #47365320;
+}
+.document-choice-grid .document-choice-check {
+  right: 0;
+  top: 0;
 }

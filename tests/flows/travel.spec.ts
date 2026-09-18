@@ -69,7 +69,6 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
     .getByRole("button", { name: /城市间航班.*查看详情与凭证/ })
     .click();
   await page.getByRole("button", { name: "修改事项", exact: true }).click();
-  await page.getByText("关联资料", { exact: true }).click();
   await page.getByLabel("测试机票.png", { exact: true }).check();
   await page.getByRole("button", { name: "保存修改" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
