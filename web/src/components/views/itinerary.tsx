@@ -303,11 +303,21 @@ export function EventDetail({
         )}
         <SectionTitle>相关资料</SectionTitle>
         {docs.length ? (
-          <div className="surface divided">
-            {docs.map((d) => (
-              <DocumentRow key={d.id} doc={d} onOpen={onDocument} />
-            ))}
-          </div>
+          <>
+            <div className="surface divided">
+              {docs.map((d) => (
+                <DocumentRow key={d.id} doc={d} onOpen={onDocument} />
+              ))}
+            </div>
+            <button
+              type="button"
+              className="secondary-button event-add-documents"
+              onClick={() => onEdit(event, 4)}
+            >
+              <Plus size={17} />
+              添加更多资料
+            </button>
+          </>
         ) : (
           <div className="surface empty-state">
             <h3>尚未关联资料</h3>
