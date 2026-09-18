@@ -76,8 +76,8 @@ export function EventTimeFields({
         : {}),
     });
   return (
-    <>
-      <div className="form-grid">
+    <div className="event-time-card">
+      <div className="form-grid event-date-fields">
         <Field
           label={stay ? "入住日期" : flight ? "起飞日期" : "日期"}
           type="date"
@@ -104,21 +104,23 @@ export function EventTimeFields({
           />
         )}
       </div>
-      <label className="inline-check">
+      <label className="inline-check event-time-switch">
         <input
           type="checkbox"
+          aria-label={
+            stay
+              ? "填写入住和退房时间"
+              : flight
+                ? "已知起飞和落地时间"
+                : "填写具体时间"
+          }
           checked={v.timeMode === "timed"}
           onChange={(e) => set("timeMode", e.target.checked ? "timed" : "date")}
         />
-        {stay
-          ? "填写入住和退房时间"
-          : flight
-            ? "已知起飞和落地时间"
-            : "填写具体时间"}
-        <small>可以稍后完善</small>
+        <span>填写时间</span>
       </label>
       {v.timeMode === "timed" && (
-        <div className="form-grid">
+        <div className="form-grid event-hours-fields">
           <Field
             label={stay ? "入住时间" : flight ? "起飞时间" : "开始时间"}
             type="time"
@@ -144,7 +146,7 @@ export function EventTimeFields({
           )}
         </div>
       )}
-      <details className="optional-details">
+      <details className="event-zone-settings">
         <summary>
           {transport ? "出发地与到达地当地时间" : "调整当地时间"}
         </summary>
@@ -191,6 +193,6 @@ export function EventTimeFields({
           )}
         </>
       )}
-    </>
+    </div>
   );
 }

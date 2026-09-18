@@ -168,6 +168,9 @@ export function EventEditor({
     <Sheet
       open
       title={event ? "修改事项" : "添加事项"}
+      className={
+        step === 2 ? "event-entry-sheet compact-event" : "event-entry-sheet"
+      }
       onClose={() => !busy && onClose()}
     >
       <form className="editor-form" onSubmit={save}>
@@ -206,7 +209,7 @@ export function EventEditor({
         ) : (
           <>
             {transport && (
-              <div className="form-grid">
+              <div className="form-grid event-route-fields">
                 <Field
                   label="出发地"
                   value={v.from}
@@ -232,74 +235,75 @@ export function EventEditor({
               onChange={(s) => change("title", s)}
             />
             <EventTimeFields v={timing} kind={v.kind} onChange={setTiming} />
-            <details className="optional-details">
-              <summary>更多信息（选填）</summary>
-              <div className="optional-fields">
-                {!stay && !transport && (
+            <div className="event-option-grid">
+              <details className="optional-details event-more">
+                <summary>更多信息（选填）</summary>
+                <div className="optional-fields">
+                  {!stay && !transport && (
+                    <Field
+                      label="地点"
+                      value={v.place}
+                      onChange={(s) => change("place", s)}
+                    />
+                  )}
                   <Field
-                    label="地点"
-                    value={v.place}
-                    onChange={(s) => change("place", s)}
+                    label="详细地址"
+                    value={v.address}
+                    onChange={(s) => change("address", s)}
                   />
-                )}
-                <Field
-                  label="详细地址"
-                  value={v.address}
-                  onChange={(s) => change("address", s)}
-                />
-                {(stay || transport) && (
-                  <Field
-                    label={v.kind === "flight" ? "航班号" : "预订编号"}
-                    value={v.code}
-                    onChange={(s) => change("code", s)}
-                  />
-                )}
-                {stay && (
-                  <Field
-                    label="酒店电话"
-                    type="tel"
-                    value={v.phone}
-                    onChange={(s) => change("phone", s)}
-                  />
-                )}
-                <label>
-                  说明
-                  <textarea
-                    aria-label="说明"
-                    value={v.note}
-                    maxLength={3000}
-                    onChange={(e) => change("note", e.target.value)}
-                  />
-                </label>
-                <label className="inline-check">
-                  <input
-                    type="checkbox"
-                    checked={v.certainty === "confirmed"}
-                    onChange={(e) =>
-                      change(
-                        "certainty",
-                        e.target.checked ? "confirmed" : "suggested",
-                      )
-                    }
-                  />
-                  安排已确认
-                </label>
+                  {(stay || transport) && (
+                    <Field
+                      label={v.kind === "flight" ? "航班号" : "预订编号"}
+                      value={v.code}
+                      onChange={(s) => change("code", s)}
+                    />
+                  )}
+                  {stay && (
+                    <Field
+                      label="酒店电话"
+                      type="tel"
+                      value={v.phone}
+                      onChange={(s) => change("phone", s)}
+                    />
+                  )}
+                  <label>
+                    说明
+                    <textarea
+                      aria-label="说明"
+                      value={v.note}
+                      maxLength={3000}
+                      onChange={(e) => change("note", e.target.value)}
+                    />
+                  </label>
+                  <label className="inline-check">
+                    <input
+                      type="checkbox"
+                      checked={v.certainty === "confirmed"}
+                      onChange={(e) =>
+                        change(
+                          "certainty",
+                          e.target.checked ? "confirmed" : "suggested",
+                        )
+                      }
+                    />
+                    安排已确认
+                  </label>
+                </div>
+              </details>
+              <div className="attachment-entry">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setUploading(true)}
+                >
+                  ＋{" "}
+                  {stay
+                    ? "添加住宿订单"
+                    : v.kind === "flight"
+                      ? "添加机票"
+                      : "添加图片或文件"}
+                </button>
               </div>
-            </details>
-            <div className="attachment-entry">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setUploading(true)}
-              >
-                ＋{" "}
-                {stay
-                  ? "添加住宿订单"
-                  : v.kind === "flight"
-                    ? "添加机票"
-                    : "添加图片或文件"}
-              </button>
-              <small>选填，上传的资料会保留在旅行资料中。</small>
             </div>
             {docs.length > 0 && (
               <details className="optional-details" open={documents.length > 0}>

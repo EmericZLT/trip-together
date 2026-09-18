@@ -45,6 +45,15 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
     ).toBe(true);
   }
   await page.setViewportSize({ width: 390, height: 844 });
+  const compactBox = await page.getByRole("dialog").boundingBox();
+  expect(compactBox!.height).toBeLessThan(650);
+  const moreBox = await page
+    .getByText("更多信息（选填）", { exact: true })
+    .boundingBox();
+  const uploadBox = await page
+    .getByRole("button", { name: "＋ 添加图片或文件", exact: true })
+    .boundingBox();
+  expect(Math.abs(moreBox!.y - uploadBox!.y)).toBeLessThan(8);
   await page.screenshot({ path: `.local/simple-event-${browserName}.png` });
   await page.getByRole("button", { name: "添加活动", exact: true }).click();
   await expect(
