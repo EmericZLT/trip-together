@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Bootstrap, TripDocument } from "@/lib/models";
 import { api, ApiError, setActiveTrip } from "@/lib/api";
+import { track, type AnalyticsPage } from "@/lib/analytics/client";
 import { ProfileTrips } from "./profile/trip-switcher";
 import { Login } from "./login";
 import { TripList } from "./trips/trip-list";
@@ -31,6 +32,10 @@ export function AppShell() {
     [error, setError] = useState("");
   const [doc, setDoc] = useState<TripDocument | null>(null);
   const selectedRef = useRef("");
+  useEffect(() => {
+    if (!loading && boot)
+      track("page_viewed", managing ? "trips" : (tab as AnalyticsPage));
+  }, [loading, Boolean(boot), managing, tab]);
   const expired = useCallback(() => {
     setBoot(null);
     setSelected("");

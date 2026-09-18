@@ -45,9 +45,14 @@ export async function saveEvent(
         )
         .run()
     : await env.DB.prepare(
-        "INSERT INTO events (id,trip_id,data) VALUES (?,?,?)",
+        "INSERT INTO events (id,trip_id,data,created_by) VALUES (?,?,?,?)",
       )
-        .bind(eventId, tripId, JSON.stringify({ ...data, id: eventId }))
+        .bind(
+          eventId,
+          tripId,
+          JSON.stringify({ ...data, id: eventId }),
+          memberId,
+        )
         .run();
   if (!r.meta.changes) throw new HttpError(409, "事项已经变更，请刷新后重试");
   return json({ id: eventId });

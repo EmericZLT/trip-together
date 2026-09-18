@@ -1,3 +1,7 @@
+import { analyticsConfig } from "./analytics/config";
+import { analyticsScheduled } from "./analytics/delivery";
+import { summaryResponse } from "./analytics/summary";
+import { trackResponse } from "./analytics/track";
 import { searchPlaces } from "./places/search";
 import { sendCode, verificationRequired } from "./security/email";
 import { HttpError, json, sameOrigin, secure } from "./http";
@@ -16,6 +20,9 @@ import { personalDocument } from "./storage/personal-documents";
 import { fileResponse } from "./files";
 import { avatarResponse, uploadAvatar } from "./avatars";
 export default {
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(analyticsScheduled(env));
+  },
   async fetch(request, env): Promise<Response> {
     try {
       const url = new URL(request.url),
@@ -28,6 +35,12 @@ export default {
         return r;
       }
       if (!["GET", "HEAD"].includes(method)) sameOrigin(request);
+      if (path === "/api/analytics/config" && method === "GET")
+        return secure(json({ enabled: Boolean(analyticsConfig(env)) }));
+      if (path === "/api/analytics/summary" && method === "GET")
+        return secure(await summaryResponse(request, env));
+      if (path === "/api/analytics/track" && method === "POST")
+        return secure(await trackResponse(request, env));
       if (path === "/api/auth-config" && method === "GET")
         return secure(
           json({

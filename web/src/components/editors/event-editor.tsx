@@ -1,4 +1,6 @@
 "use client";
+import { useEffect } from "react";
+import { track } from "@/lib/analytics/client";
 import { useRef, useState } from "react";
 import type { TripData, TripEvent, TripDocument } from "@/lib/models";
 import { api } from "@/lib/api";
@@ -35,6 +37,12 @@ export function EventEditor({
   onSaved: (date?: string) => Promise<void>;
 }) {
   const [step, setStep] = useState<number>(initialStep);
+  useEffect(() => {
+    track("event_form_opened", "itinerary");
+  }, []);
+  useEffect(() => {
+    track("event_step_viewed", "itinerary", step);
+  }, [step]);
   const zone = event?.timezone ?? data.trip.timezone;
   const day = initialDate ?? data.trip.start_date;
   const [v, setV] = useState({

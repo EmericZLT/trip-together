@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import { TravelSticker } from "./travel-sticker";
+import { track } from "@/lib/analytics/client";
 import { api } from "@/lib/api";
 type Mode = "login" | "register" | "recover" | "migrate";
 const titles = {
@@ -12,6 +13,9 @@ const titles = {
 };
 export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
   const [mode, setMode] = useState<Mode>("login");
+  useEffect(() => {
+    track("page_viewed", mode);
+  }, [mode]);
   const [email, setEmail] = useState(""),
     [legacyUsername, setLegacy] = useState(""),
     [password, setPassword] = useState(""),

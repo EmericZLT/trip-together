@@ -36,11 +36,22 @@
   },
   "vars": {
     "APP_ENV": "production",
-    "EMAIL_FROM": ""
+    "EMAIL_FROM": "",
+    "ANALYTICS_ENABLED": "false",
+    "ANALYTICS_HOSTNAME": "",
+    "UMAMI_ORIGIN": "https://cloud.umami.is",
+    "UMAMI_API_ORIGIN": "https://api.umami.is/v1",
+    "UMAMI_WEBSITE_ID": "",
+    "UMAMI_BOARD_ID": ""
   },
   "send_email": [
     {
       "name": "EMAIL"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": [
+      "*/5 * * * *"
+    ]
+  }
 }

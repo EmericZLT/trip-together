@@ -1,4 +1,5 @@
 "use client";
+import { track } from "@/lib/analytics/client";
 import { useRef, useState } from "react";
 import type { TripDocument } from "@/lib/models";
 import { api, apiUrl } from "@/lib/api";
@@ -39,6 +40,7 @@ export function DocumentUpload({
       setError("请选择或输入资料分类");
       return;
     }
+    if (!started) track("document_upload_started", "documents");
     cancelled.current = false;
     setStarted(true);
     setBusy(true);

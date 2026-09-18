@@ -8,7 +8,7 @@
     "preview": "wrangler dev --config infra/wrangler.jsonc --local --persist-to .local/travel-state --ip 0.0.0.0 --port 8790",
     "setup": "node scripts/setup.mjs",
     "typecheck": "tsc -p web/tsconfig.json --noEmit && tsc -p infra/tsconfig.json --noEmit",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test tests/*.test.ts tests/analytics/*.test.ts",
     "test:e2e": "playwright test --config tests/playwright.config.ts",
     "deploy:check": "wrangler deploy --config infra/wrangler.jsonc --dry-run",
     "deploy": "node scripts/deploy.mjs",
@@ -17,7 +17,8 @@
     "test:e2e:safari": "PW_BROWSER=webkit playwright test --config tests/playwright.config.ts",
     "verify": "npm run typecheck && npm run build && node scripts/verify.mjs",
     "audit:source": "node scripts/audit-source.mjs",
-    "export:source": "node scripts/export-source.mjs"
+    "export:source": "node scripts/export-source.mjs",
+    "analytics:setup": "node scripts/analytics/setup.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
