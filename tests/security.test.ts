@@ -155,3 +155,48 @@ test("无行程账号可管理昵称与私人文件，bootstrap 不包含他人�
   await a.request("/profile", "PUT", { ...own.me, name: "新的昵称" });
   assert.equal((await a.request("/bootstrap")).me.name, "新的昵称");
 });
+
+test("资料改名保留文件、校验私有与跨行程权限，并拒绝并发覆盖", async () => {
+  const owner = await new Client().register(),
+    other = await new Client().register();
+  const trip = await createTrip(owner),
+    otherTrip = await createTrip(other);
+  const id = crypto.randomUUID(),
+    privateId = crypto.randomUUID();
+  const path = `/trips/${trip}/documents/${id}`;
+  await owner.upload(path);
+  await owner.upload(`/trips/${trip}/documents/${privateId}?private=1`);
+  const original = Buffer.from(await (await owner.file(id)).arrayBuffer());
+  const change = { name: "  东京酒店入住凭证  ", previousName: "测试图片.png" };
+  await other.request(path, "PATCH", change, 404);
+  await other.request(
+    `/trips/${otherTrip}/documents/${id}`,
+    "PATCH",
+    change,
+    404,
+  );
+  const invite = await owner.request(`/trips/${trip}/invites`, "POST", {});
+  await other.request("/join", "POST", { token: invite.token });
+  await other.request(
+    `/trips/${trip}/documents/${privateId}`,
+    "PATCH",
+    change,
+    404,
+  );
+  for (const name of ["  ", "a".repeat(201), "资料\n名称", "../资料"]) {
+    await owner.request(path, "PATCH", { ...change, name }, 400);
+  }
+  await other.request(path, "PATCH", change);
+  await owner.request(path, "PATCH", { ...change, name: "过时修改" }, 409);
+  const doc = (await owner.request(`/trips/${trip}/data`)).documents.find(
+    (doc: { id: string }) => doc.id === id,
+  );
+  assert.equal(doc.name, "东京酒店入住凭证");
+  const file = await owner.file(id);
+  assert.deepEqual(Buffer.from(await file.arrayBuffer()), original);
+  assert.ok(
+    file.headers
+      .get("content-disposition")
+      ?.includes(encodeURIComponent("东京酒店入住凭证.png")),
+  );
+});

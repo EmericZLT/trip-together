@@ -47,7 +47,11 @@ export async function tripRouter(
     if (method === "DELETE")
       return deleteDraftReceipt(env, memberId, tripId, id);
   }
-  if (resource === "documents" && id && ["PUT", "DELETE"].includes(method))
+  if (
+    resource === "documents" &&
+    id &&
+    ["PUT", "PATCH", "DELETE"].includes(method)
+  )
     return tripDocument(request, env, memberId, tripId, id);
   throw new HttpError(404, "接口不存在");
 }

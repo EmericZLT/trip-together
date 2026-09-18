@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { png, tripInput } from "../support/api";
+import { Client, createTrip, png, tripInput } from "../support/api";
 import { mkdir } from "node:fs/promises";
 test("从注册到行程、文件、账本、证件和重新登录", async ({
   page,
@@ -158,4 +158,59 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await expect(page.getByRole("heading", { name: "城市间航班" })).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test("资料预览改名失败保留输入，保存后按新名称搜索并持久保存", async ({
+  page,
+}) => {
+  const account = await new Client().register();
+  const trip = await createTrip(account),
+    id = crypto.randomUUID();
+  await account.upload(`/trips/${trip}/documents/${id}`);
+  await page.goto("/");
+  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("密码", { exact: true }).fill(account.password);
+  await page.getByRole("button", { name: "登录", exact: true }).click();
+  await page.getByRole("button", { name: "资料", exact: true }).click();
+  await page
+    .getByRole("button", { name: "查看测试图片.png", exact: true })
+    .click();
+  await page.getByRole("button", { name: "修改名称", exact: true }).click();
+  await expect(page.getByLabel("资料名称", { exact: true })).toHaveValue(
+    "测试图片.png",
+  );
+  await page.getByLabel("资料名称", { exact: true }).fill("东京酒店入住凭证");
+  let fail = true;
+  await page.route("**/documents/*", async (route) => {
+    if (route.request().method() === "PATCH" && fail) {
+      fail = false;
+      await route.fulfill({
+        status: 503,
+        json: { error: "保存暂时失败，请重试" },
+      });
+    } else await route.continue();
+  });
+  await page.getByRole("button", { name: "保存名称", exact: true }).click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "保存暂时失败" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("资料名称", { exact: true })).toHaveValue(
+    "东京酒店入住凭证",
+  );
+  await page.getByRole("button", { name: "保存名称", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await expect(
+    page.getByRole("dialog", { name: "东京酒店入住凭证", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "关闭", exact: true }).click();
+  await page.getByLabel("搜索文件").fill("入住凭证");
+  await expect(
+    page.getByRole("button", { name: "查看东京酒店入住凭证", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "资料", exact: true }).click();
+  await page.getByLabel("搜索文件").fill("入住凭证");
+  await expect(
+    page.getByRole("button", { name: "查看东京酒店入住凭证", exact: true }),
+  ).toBeVisible();
 });

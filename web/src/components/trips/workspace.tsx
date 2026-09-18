@@ -260,7 +260,24 @@ export function TripWorkspace({
           </div>
         </Sheet>
       )}
-      <DocumentPreview doc={doc} onClose={() => setDoc(null)} />
+      <DocumentPreview
+        key={doc?.id}
+        doc={doc}
+        onClose={() => setDoc(null)}
+        onRenamed={(updated) => {
+          setDoc(updated);
+          setData((current) =>
+            current
+              ? {
+                  ...current,
+                  documents: current.documents.map((item) =>
+                    item.id === updated.id ? updated : item,
+                  ),
+                }
+              : current,
+          );
+        }}
+      />
     </>
   );
 }

@@ -10,9 +10,11 @@ import {
   Plane,
   FolderOpen,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import type { TripDocument } from "@/lib/models";
 import { DocumentUpload, DeleteDocument } from "../files/document-manager";
+import { RenameDocument } from "../files/rename-document";
 import { SheetFooter, Sheet } from "../ui";
 function documentTitle(doc: TripDocument) {
   return doc.name;
@@ -192,11 +194,14 @@ export function DocumentPreview({
   doc,
   onClose,
   sourceUrl,
+  onRenamed,
 }: {
   doc: TripDocument | null;
   sourceUrl?: string;
+  onRenamed?: (doc: TripDocument) => void;
   onClose: () => void;
 }) {
+  const [renaming, setRenaming] = useState(false);
   if (!doc) return null;
   return (
     <Sheet
@@ -206,7 +211,24 @@ export function DocumentPreview({
       wide
       className="document-sheet"
     >
+      {renaming && onRenamed && (
+        <RenameDocument
+          doc={doc}
+          onClose={() => setRenaming(false)}
+          onSaved={onRenamed}
+        />
+      )}
       <SheetFooter className="preview-actions">
+        {doc.trip_id && onRenamed && !sourceUrl && (
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setRenaming(true)}
+          >
+            <Pencil size={16} />
+            修改名称
+          </button>
+        )}
         <a
           className="secondary-button"
           target="_blank"

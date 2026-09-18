@@ -20,11 +20,25 @@ export async function fileResponse(
   const range = request.headers.get("range");
   const head = await env.FILES.head(doc.r2_key);
   if (!head) throw new HttpError(404, "文件尚未导入，请完成资料初始化");
+  const extension =
+    (
+      {
+        "image/png": ".png",
+        "image/jpeg": ".jpg",
+        "image/webp": ".webp",
+        "application/pdf": ".pdf",
+      } as Record<string, string>
+    )[doc.mime] ?? "";
+  const filename =
+    doc.name.toLowerCase().endsWith(extension) ||
+    (doc.mime === "image/jpeg" && /\.jpe?g$/i.test(doc.name))
+      ? doc.name
+      : doc.name + extension;
   const headers = new Headers({
     "Content-Type": doc.mime,
     "Cache-Control": "private, no-store",
     "Accept-Ranges": "bytes",
-    "Content-Disposition": `${new URL(request.url).searchParams.has("download") ? "attachment" : "inline"}; filename="document${doc.name.slice(doc.name.lastIndexOf("."))}"; filename*=UTF-8''${encodeURIComponent(doc.name)}`,
+    "Content-Disposition": `${new URL(request.url).searchParams.has("download") ? "attachment" : "inline"}; filename="document${extension}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
   });
   let offset = 0,
     length = head.size,

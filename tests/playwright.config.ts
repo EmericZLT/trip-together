@@ -8,6 +8,8 @@ export default defineConfig({
   timeout: 90000,
   use: {
     actionTimeout: 15000,
+    // Keep independent browser runs from sharing the local login rate-limit bucket.
+    extraHTTPHeaders: { "CF-Connecting-IP": `e2e-${crypto.randomUUID()}` },
     baseURL: process.env.TEST_BASE_URL ?? "http://localhost:8791",
     ...devices["iPhone 13"],
     defaultBrowserType:
