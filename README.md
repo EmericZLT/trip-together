@@ -2,7 +2,7 @@
 
 开源、可自行部署的多人旅行规划工具。用户注册后创建行程，邀请同行人，共同维护航班、住宿、活动、资料与账本。默认数据库为空，没有预设成员、示例账号或私人行程。
 
-Next.js static export + React + Tailwind CSS。默认部署切分与 quatre-vingt 相同：前端 Vercel（可绑国内域名），后端 Render，SQLite 与上传文件落在 Render 磁盘，UptimeRobot 访问 `/health` 防止休眠。界面遵循 [DESIGN.md](DESIGN.md)。
+前端为 Next.js 静态导出，界面规范见 [DESIGN.md](DESIGN.md)。后端为 Node 服务：账号、行程和账本写入 SQLite，资料文件存于服务器私有目录。推荐部署方式是前端放在 Vercel，后端放在 Render，并用 UptimeRobot 访问 `/health` 避免免费实例休眠。自定义域名解析到 Vercel 即可。
 
 ## 本地运行
 
@@ -49,7 +49,7 @@ curl -X POST https://your-service.onrender.com/api/setup/seed \
   -d @data/seed-members.json
 ```
 
-若把成员写在 JSON 文件根级数组，请改成 `{"members":[...],"expenses":[]}` 再 POST。
+成员 JSON 可以是数组，也可以是 `{"members":[...],"expenses":[]}`。
 
 ## 使用流程
 
@@ -82,19 +82,19 @@ npm run verify
 npm run deploy:check
 ```
 
-`verify` 执行类型检查、构建，并启动独立临时 Wrangler D1/R2，运行 API、领域逻辑、Chromium 与 WebKit 测试，结束后清理测试存储。测试使用自动生成的虚构账号和内容，不读取开发或生产数据。首次运行浏览器测试可能需要 `npx playwright install chromium webkit`。
+`verify` 执行类型检查与前端构建。仓库仍保留针对原 Cloudflare Worker 路径的测试；当前默认运行方式是 `npm run dev:backend` 与 `npm run seed`。浏览器测试可能需要先执行 `npx playwright install chromium webkit`。
 
 API 测试覆盖邮箱注册、验证码、密码重置、旧账号绑定邮箱、CSRF、注销、跨行程隔离、文件权限、完整录入、并发修改和超过六人的分摊。截图和失败 trace 位于 `.local/`。
 
 ## 部署
 
-详见 [部署与维护](docs/deployment.md)。推荐与 quatre-vingt 相同：
+详见 [部署与维护](docs/deployment.md)。推荐步骤：
 
-1. GitHub 推送本仓库
-2. Render 部署后端 Web Service（Oregon、Free），健康检查 `/health`
-3. UptimeRobot 每 5 分钟请求 `https://your-service.onrender.com/health`
-4. Vercel 部署前端，环境变量 `NEXT_PUBLIC_API_URL` 指向 Render
-5. 阿里云域名 CNAME 到 Vercel；Render 的 `ALLOWED_ORIGINS` 写上该域名和 `*.vercel.app`
+1. 将本仓库推送到 GitHub
+2. 在 Render 部署 Web Service，健康检查路径为 `/health`
+3. 用 UptimeRobot 每 5 分钟请求 `https://your-service.onrender.com/health`
+4. 在 Vercel 部署前端，环境变量 `NEXT_PUBLIC_API_URL` 指向 Render 地址
+5. 如需自定义域名，在 Vercel 绑定后把该域名写入 Render 的 `ALLOWED_ORIGINS`
 
 仓库不含真实账号或行程数据。Render 免费磁盘在重新部署后可能被清空，行程填好后避免无意义的重复 Deploy。
 

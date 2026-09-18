@@ -1,6 +1,6 @@
 # 部署与维护
 
-默认采用与 quatre-vingt 相同的切分：GitHub 存源码，Vercel 挂前端并可绑定国内域名，Render 跑 API 与 SQLite。四个人改行程和账本，读写的是 Render 上那一份库，不是 Git。
+TripTogether 把源码放在 GitHub，把页面放在 Vercel，把 API 和数据放在 Render。账号、行程和账本写在 Render 上的 SQLite 里，多人同时修改的是这一份库，不是 Git 仓库。
 
 ## 1. 后端 Render
 
@@ -28,11 +28,11 @@ SEED_TOKEN=随机长字符串，仅用于一次性写入行程
 4. Health Check Path: `/health`
 5. 记下 URL，例如 `https://trip-together-backend.onrender.com`
 
-仓库根目录的 `render.yaml` 可导入同样配置。`ALLOWED_ORIGINS` 必须包含 Vercel 域名和之后绑定的国内域名，否则浏览器会拦截登录请求。
+仓库根目录的 `render.yaml` 可导入同样配置。`ALLOWED_ORIGINS` 必须包含 Vercel 域名以及之后绑定的自定义域名，否则浏览器会拦截登录请求。
 
 ## 2. 防止休眠
 
-Render 免费实例约 15 分钟无访问会休眠。与八十分相同，用 UptimeRobot：
+Render 免费实例约 15 分钟无访问会休眠。使用 UptimeRobot 保持进程在线：
 
 - URL: `https://trip-together-backend.onrender.com/health`
 - 间隔: 5 分钟
@@ -49,7 +49,7 @@ NEXT_PUBLIC_API_URL=https://trip-together-backend.onrender.com
 ```
 
 4. 部署完成后会得到 `xxx.vercel.app`。把该地址补进 Render 的 `ALLOWED_ORIGINS` 后手动 Redeploy 一次后端。
-5. Domains 里添加阿里云域名。阿里云解析添加 CNAME 到 Vercel 给出的目标。再把 `https://www.your-domain.com` 写入 `ALLOWED_ORIGINS`。
+5. 若要使用自己的域名，在 Vercel Domains 中添加，并在域名服务商处把记录 CNAME 到 Vercel 给出的目标。然后将 `https://www.your-domain.com` 写入 `ALLOWED_ORIGINS`。
 
 ## 4. 数据落在哪里
 
@@ -58,7 +58,7 @@ NEXT_PUBLIC_API_URL=https://trip-together-backend.onrender.com
 - 源码：GitHub
 - 页面：Vercel
 
-这与 quatre-vingt 的 `game.db` 在 Render 上是同一类做法。UptimeRobot 保活时数据会一直在；**重新部署 Web Service 可能清空磁盘**，填好行程后不要频繁点 Manual Deploy。
+UptimeRobot 保活时数据会一直在；**重新部署 Web Service 可能清空磁盘**，填好行程后不要频繁点 Manual Deploy。
 
 ## 5. 使用
 
