@@ -30,8 +30,12 @@ export async function passwordHash(password: string, salt: string) {
   );
 }
 export function equal(a: string, b: string) {
-  return (
-    a.length === b.length &&
-    crypto.subtle.timingSafeEqual(encoder.encode(a), encoder.encode(b))
-  );
+  const left = encoder.encode(a);
+  const right = encoder.encode(b);
+  const length = Math.max(left.length, right.length);
+  let diff = left.length ^ right.length;
+  for (let i = 0; i < length; i += 1) {
+    diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
+  }
+  return diff === 0;
 }

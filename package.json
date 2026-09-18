@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm run dev:backend",
+    "dev": "node scripts/dev-local.mjs",
     "dev:backend": "tsx watch backend/server.ts",
     "dev:web": "next dev web --port 3000",
     "seed": "tsx scripts/seed-nz-trip.ts",

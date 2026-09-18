@@ -12,16 +12,12 @@
 npm ci
 cp .env.example .env
 # 把 SESSION_SIGNING_KEY 改成至少 32 个字符
-npm run dev:backend
+npm run dev
 ```
 
-另开终端：
+一条命令会同时启动页面和 API，改前端或后端代码后会自动重载。打开 http://localhost:3000；后端健康检查为 http://localhost:8790/health。首次启动会在 `data/` 创建空白 SQLite。
 
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8790 npm run dev:web
-```
-
-打开 http://localhost:3000。后端 http://localhost:8790/health。首次启动会在 `data/` 创建空白 SQLite。
+也可以分两个终端手动启动：`npm run dev:backend`，以及 `NEXT_PUBLIC_API_URL=http://localhost:8790 npm run dev:web`。
 
 ## 写入本次南北岛行程与四人账号
 

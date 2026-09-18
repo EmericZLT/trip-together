@@ -106,6 +106,7 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
       JSON.stringify({
         event: "request_failed",
         type: e instanceof Error ? e.name : "unknown",
+        message: e instanceof Error ? e.message : String(e),
       }),
     );
     return secure(json({ error: "服务暂时不可用，请稍后重试" }, 500));
