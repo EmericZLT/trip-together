@@ -13,6 +13,7 @@ import {
   Pencil,
 } from "lucide-react";
 import type { TripDocument } from "@/lib/models";
+import { fileUrl } from "@/lib/api";
 import { DocumentUpload, DeleteDocument } from "../files/document-manager";
 import { RenameDocument } from "../files/rename-document";
 import { SheetFooter, Sheet } from "../ui";
@@ -20,7 +21,7 @@ function documentTitle(doc: TripDocument) {
   return doc.name;
 }
 export function documentUrl(doc: TripDocument, download = false) {
-  return `/api/files/${doc.id}${download ? "?download=1" : ""}`;
+  return fileUrl(doc.id, download);
 }
 export function DocumentRow({
   doc,

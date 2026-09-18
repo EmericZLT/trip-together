@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm run build && npm run preview",
+    "dev": "npm run dev:backend",
+    "dev:backend": "tsx watch backend/server.ts",
+    "dev:web": "next dev web --port 3000",
+    "start": "tsx backend/server.ts",
     "build": "next build web",
     "preview": "wrangler dev --config infra/wrangler.jsonc --local --persist-to .local/travel-state --ip 0.0.0.0 --port 8790",
     "setup": "node scripts/setup.mjs",
@@ -13,7 +16,7 @@
     "deploy:check": "wrangler deploy --config infra/wrangler.jsonc --dry-run",
     "deploy": "node scripts/deploy.mjs",
     "types": "wrangler types --strict-vars false --config infra/wrangler.jsonc infra/env.d.ts",
-    "format": "prettier --write \"worker/**/*.ts\" \"web/src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"tests/*.ts\"",
+    "format": "prettier --write \"backend/**/*.ts\" \"worker/**/*.ts\" \"web/src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"tests/*.ts\"",
     "test:e2e:safari": "PW_BROWSER=webkit playwright test --config tests/playwright.config.ts",
     "verify": "npm run typecheck && npm run build && node scripts/verify.mjs",
     "audit:source": "node scripts/audit-source.mjs",
@@ -28,7 +31,9 @@
     "next": "^16.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "better-sqlite3": "^12.4.1",
+    "tsx": "^4.23.13"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
@@ -39,7 +44,7 @@
     "miniflare": "5.20260911.1-alpha",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.13",
+    "@types/better-sqlite3": "^7.6.13",
     "typescript": "^7.0.2",
     "wrangler": "^4.131.2"
   },
@@ -50,10 +55,10 @@
   "description": "开源多人旅行规划工具：行程管理、资料共享与共同记账",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/i1mT/trip-together.git"
+    "url": "git+https://github.com/EmericZLT/trip-together.git"
   },
-  "homepage": "https://github.com/i1mT/trip-together#readme",
+  "homepage": "https://github.com/EmericZLT/trip-together#readme",
   "bugs": {
-    "url": "https://github.com/i1mT/trip-together/issues"
+    "url": "https://github.com/EmericZLT/trip-together/issues"
   }
 }

@@ -8,6 +8,7 @@ export function uploadFile(
   let aborted = false;
   const promise = new Promise<void>((resolve, reject) => {
     xhr.open("PUT", url);
+    xhr.withCredentials = true;
     xhr.timeout = 120000;
 
     xhr.upload.onprogress = (event) => {

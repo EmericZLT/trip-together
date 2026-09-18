@@ -27,15 +27,18 @@ export function track(
     if (localStorage.getItem("analytics-disabled") === "true") return;
   } catch {}
   anonymousId ??= crypto.randomUUID();
-  enabled ??= fetch("/api/analytics/config")
+  enabled ??= fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/analytics/config`, {
+    credentials: "include",
+  })
     .then((r) => (r.ok ? r.json() : { enabled: false }))
     .then((r) => r.enabled === true)
     .catch(() => false);
   void enabled
     .then(async (active) => {
       if (!active) return;
-      await fetch("/api/analytics/track", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/analytics/track`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: crypto.randomUUID(),

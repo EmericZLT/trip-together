@@ -1,6 +1,7 @@
 "use client";
 import { Check, FileText, Plus } from "lucide-react";
 import type { TripDocument } from "@/lib/models";
+import { fileUrl } from "@/lib/api";
 export function DocumentChoices({
   documents,
   selected,
@@ -50,7 +51,7 @@ export function DocumentChoices({
                 className={`file-icon ${doc.mime.startsWith("image/") ? "file-thumbnail" : ""}`}
               >
                 {doc.mime.startsWith("image/") ? (
-                  <img src={`/api/files/${doc.id}`} alt="" loading="lazy" />
+                  <img src={fileUrl(doc.id)} alt="" loading="lazy" />
                 ) : (
                   <FileText size={30} />
                 )}

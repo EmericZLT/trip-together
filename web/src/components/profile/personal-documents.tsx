@@ -13,7 +13,7 @@ import type { TripData, TripDocument } from "@/lib/models";
 import type { FileTile } from "../files/file-tiles";
 import { DocumentRow, DocumentPreview } from "../views/documents";
 import { uploadFile, validateFiles } from "@/lib/files/upload";
-import { api } from "@/lib/api";
+import { api, apiUrl, fileUrl } from "@/lib/api";
 import { SheetFooter, Sheet } from "../ui";
 export function PersonalDocuments({
   data,
@@ -46,14 +46,14 @@ export function PersonalDocuments({
     setDraft({ ...item, status: "uploading", progress: 0 });
     try {
       await uploadFile(
-        `/api/personal-documents/${item.id}`,
+        apiUrl(`/personal-documents/${item.id}`),
         item.file,
         (progress) => setDraft({ ...item, status: "uploading", progress }),
       ).promise;
       await onRefresh();
       setPreview((current) =>
         current?.id === item.id
-          ? { ...current, url: `/api/files/${item.id}` }
+          ? { ...current, url: fileUrl(item.id) }
           : current,
       );
       URL.revokeObjectURL(item.url);

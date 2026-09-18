@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Member } from "@/lib/models";
+import { avatarUrl } from "@/lib/api";
 
 export function Avatar({
   member,
@@ -17,7 +18,7 @@ export function Avatar({
         // Private Worker images require the same-origin session cookie.
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={`/api/avatars/${encodeURIComponent(member.id)}?v=${member.version ?? 0}`}
+          src={avatarUrl(member.id, member.version)}
           alt={`${member.name}的头像`}
           width={96}
           height={96}

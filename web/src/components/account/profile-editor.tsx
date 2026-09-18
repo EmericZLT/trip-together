@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Profile } from "@/lib/models";
-import { api } from "@/lib/api";
+import { api, apiUrl } from "@/lib/api";
 import { uploadFile, validateFiles } from "@/lib/files/upload";
 import { SheetForm, SheetFooter, Sheet } from "../ui";
 import { Avatar } from "../avatar";
@@ -46,7 +46,7 @@ export function ProfileEditor({
     try {
       if (file) {
         validateFiles([file], true);
-        await uploadFile("/api/avatar", file, setProgress).promise;
+        await uploadFile(apiUrl("/avatar"), file, setProgress).promise;
       } else await api("/avatar", { method: "DELETE" });
       const result = await api<{ me: Profile }>("/bootstrap");
       setV((prev) => ({

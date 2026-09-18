@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { Expense, TripData } from "@/lib/models";
 import { currencyLabel, money, splitAmount } from "@/lib/money";
-import { api } from "@/lib/api";
+import { api, fileUrl } from "@/lib/api";
 import { Avatar } from "../avatar";
 import { SheetFooter, Sheet } from "../ui";
 import { FileTiles } from "../files/file-tiles";
@@ -131,7 +131,7 @@ export function ExpenseDetail({
             <FileTiles
               files={files.map((file) => ({
                 ...file,
-                url: `/api/files/${file.id}`,
+                url: fileUrl(file.id),
               }))}
             />
           ) : (

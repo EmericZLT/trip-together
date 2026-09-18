@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: trip-together-backend
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: APP_ENV
+        value: production
+      - key: SKIP_EMAIL_VERIFICATION
+        value: "true"
+      - key: DATA_DIR
+        value: ./data
+      - key: SESSION_SIGNING_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: GEOAPIFY_API_KEY
+        sync: false

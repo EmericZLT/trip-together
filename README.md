@@ -2,7 +2,7 @@
 
 开源、可自行部署的多人旅行规划工具。用户注册后创建行程，邀请同行人，共同维护航班、住宿、活动、资料与账本。默认数据库为空，没有预设成员、示例账号或私人行程。
 
-Next.js static export + React + Tailwind CSS；Cloudflare Worker 提供同源 API，D1 保存业务数据，私有 R2 保存文件。界面遵循 [DESIGN.md](DESIGN.md)。
+Next.js static export + React + Tailwind CSS。默认部署切分与 quatre-vingt 相同：前端 Vercel（可绑国内域名），后端 Render，SQLite 与上传文件落在 Render 磁盘，UptimeRobot 访问 `/health` 防止休眠。界面遵循 [DESIGN.md](DESIGN.md)。
 
 ## 本地运行
 
@@ -10,16 +10,22 @@ Next.js static export + React + Tailwind CSS；Cloudflare Worker 提供同源 AP
 
 ```bash
 npm ci
-npm run setup
-npm run types
-npm run dev
+cp .env.example .env
+# 把 SESSION_SIGNING_KEY 改成至少 32 个字符
+npm run dev:backend
 ```
 
-打开 http://localhost:8790。`setup` 仅创建数据库结构和本地会话密钥，不导入资料。重复运行保留已有账号和数据。本地 D1/R2 保存在忽略目录 `.local/travel-state`，不会读取其他部署的存储。
+另开终端：
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8790 npm run dev:web
+```
+
+打开 http://localhost:3000。后端 http://localhost:8790/health。首次启动会在 `data/` 创建空白 SQLite，不导入任何用户数据。
 
 ## 使用流程
 
-1. 使用邮箱和密码注册，不要求填写昵称。登录只需邮箱和密码；线上注册和忘记密码使用邮件验证码，本地跳过邮箱验证。注册后进入首页，即使没有行程也可以自由使用底部导航和个人资料。
+1. 使用邮箱和密码注册，不要求填写昵称。登录只需邮箱和密码。默认关闭邮箱验证码（`SKIP_EMAIL_VERIFICATION=true`），便于四人内部分享。注册后进入首页，即使没有行程也可以自由使用底部导航和个人资料。
 2. 通过首页引导或“我的 → 我的行程”创建、加入行程，管理页面可以返回。创建时填写名称、日期、目的地和常用时区、两种币种；在“我的”页面切换当前行程，并按账号记住选择。
 3. 在“我的行程”中点击具体行程管理设置、生成同行邀请口令或删除。管理其他行程不会自动切换当前行程。口令为 6 位大写字母，不包含 I/O，每个行程一个且不重复；再次打开管理页会显示已有有效口令。同行人注册后输入口令加入，大小写均可。口令 7 天有效，主动重新生成或确认撤销邀请会使旧口令失效。
 4. 在“完整行程”添加航班、自驾、住宿、活动或接驳事项。填写当地日期时间、时区、真实起终点、来源、提醒及关联文件。跨时区事项支持分别设置开始和结束时区。首页自动显示当前或下一事项及倒计时。
@@ -35,8 +41,8 @@ npm run dev
 - 用户账号独立于行程。`trips` 和 `trip_members` 管理所属关系；事项、清单、支出、旅行文件均关联 `trip_id`。
 - 同行成员可以共同编辑行程内容和账本。创建者负责行程设置、邀请和删除整个行程。删除操作必须确认。
 - 个人证件与证件号码仅本人可见；其他成员只能看到姓名、英文姓名与头像。即使知道文件 ID，也需要通过权限检查。
-- 私有 R2 不开启 r2.dev 或 Custom Domain，文件通过 Worker 校验签名会话、有效期与成员资格后读取。签名密钥存放 Worker Secret。
-- 密码使用独立随机 salt 与 PBKDF2，session 仅保存 hash。邮箱验证码使用 HMAC 保存，按用途隔离并限制尝试次数；重置密码和修改密码会撤销旧会话。生产环境通过 Cloudflare Email Sending 发送验证码。
+- 上传文件保存在后端私有目录，经登录会话校验后读取，不作为公开静态资源。
+- 密码使用独立随机 salt 与 PBKDF2，session 仅保存 hash。重置密码和修改密码会撤销旧会话。
 - 费用使用整数分，按币种独立统计；分摊余数确定分配。支持 CNY、NZD、USD、EUR、GBP、AUD、CAD、SGD、HKD，不自动换汇。
 - 事项时间按 IANA 时区显示；夏令时不存在的当地时间会拒绝，重复时间需要指定 UTC 偏移。设备位置仅从 Geolocation 获取坐标后查询，失败显示未定位。
 - 上传仅允许 JPG、PNG、WebP、PDF，服务端检查文件头，单份最多 10 MB；每笔支出最多 5 份凭证。
@@ -54,7 +60,15 @@ API 测试覆盖邮箱注册、验证码、密码重置、旧账号绑定邮箱�
 
 ## 部署
 
-详见 [部署与维护](docs/deployment.md)。使用独立资源和空白数据库；本仓库不包含真实账号、数据库 ID、域名或生产配置。`npm run deploy` 仅使用本地忽略的生产配置，发布前后检查 R2 的私有状态，不执行业务数据初始化。
+详见 [部署与维护](docs/deployment.md)。推荐与 quatre-vingt 相同：
+
+1. GitHub 推送本仓库
+2. Render 部署后端 Web Service（Oregon、Free），健康检查 `/health`
+3. UptimeRobot 每 5 分钟请求 `https://your-service.onrender.com/health`
+4. Vercel 部署前端，环境变量 `NEXT_PUBLIC_API_URL` 指向 Render
+5. 阿里云域名 CNAME 到 Vercel；Render 的 `ALLOWED_ORIGINS` 写上该域名和 `*.vercel.app`
+
+仓库不含真实账号或行程数据。Render 免费磁盘在重新部署后可能被清空，行程填好后避免无意义的重复 Deploy。
 
 ## 产品统计
 

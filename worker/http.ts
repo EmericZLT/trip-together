@@ -86,9 +86,18 @@ export async function body<T>(
   }
   return result.data;
 }
-export function sameOrigin(request: Request) {
+export function allowedOrigins(request: Request, env: Env) {
+  const current = new URL(request.url).origin;
+  const extra = (env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return [current, ...extra];
+}
+
+export function sameOrigin(request: Request, env: Env) {
   const origin = request.headers.get("origin");
-  if (origin !== new URL(request.url).origin)
+  if (!origin || !allowedOrigins(request, env).includes(origin))
     throw new HttpError(403, "请从本站页面提交操作");
 }
 export function secure(response: Response) {

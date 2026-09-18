@@ -11,8 +11,11 @@ const credentials = z.object({
   password: z.string().min(10).max(128),
   code: z.string().max(6).optional(),
 });
-function cookie(request: Request, value: string, age: number) {
-  return `travel_session=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${age}${new URL(request.url).protocol === "https:" ? "; Secure" : ""}`;
+function cookie(request: Request, env: Env, value: string, age: number) {
+  const https = new URL(request.url).protocol === "https:";
+  const crossSite = Boolean(env.ALLOWED_ORIGINS?.trim());
+  const sameSite = crossSite && https ? "None" : "Lax";
+  return `travel_session=${value}; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=${age}${https ? "; Secure" : ""}`;
 }
 export async function identity(request: Request, env: Env) {
   const token = await verifiedSession(request, env);
@@ -45,7 +48,7 @@ async function session(
     ),
   ]);
   return json({ ok: true, ...extra }, 200, {
-    "Set-Cookie": cookie(request, signed, 30 * 86400),
+    "Set-Cookie": cookie(request, env, signed, 30 * 86400),
   });
 }
 export async function register(request: Request, env: Env) {
@@ -158,5 +161,5 @@ export async function logout(request: Request, env: Env) {
     await env.DB.prepare("DELETE FROM sessions WHERE token_hash=?")
       .bind(await sha(token))
       .run();
-  return json({ ok: true }, 200, { "Set-Cookie": cookie(request, "", 0) });
+  return json({ ok: true }, 200, { "Set-Cookie": cookie(request, env, "", 0) });
 }

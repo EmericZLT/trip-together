@@ -16,6 +16,7 @@ const labels: Record<Purpose, string> = {
   migrate: "绑定邮箱",
 };
 export function verificationRequired(request: Request, env: Env) {
+  if (env.SKIP_EMAIL_VERIFICATION === "true") return false;
   if (env.APP_ENV !== "local") return true;
   const url = new URL(request.url);
   const local =

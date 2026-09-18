@@ -3,11 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import type { Receipt } from "@/lib/models";
 import type { FileTile } from "../files/file-tiles";
 import { uploadFile, validateFiles } from "@/lib/files/upload";
-import { api, apiUrl } from "@/lib/api";
+import { api, apiUrl, fileUrl } from "@/lib/api";
 type Attachment = FileTile & { file?: File };
 export function useReceipts(existing: Receipt[]) {
   const [files, setFiles] = useState<Attachment[]>(() =>
-    existing.map((r) => ({ ...r, url: `/api/files/${r.id}`, status: "ready" })),
+    existing.map((r) => ({ ...r, url: fileUrl(r.id), status: "ready" })),
   );
   const endpoint = useRef(apiUrl("/receipts")).current;
   const items = useRef(files);
