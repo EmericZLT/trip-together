@@ -8,7 +8,7 @@ import { ReceiptPicker, useReceipts } from "./ledger/receipt-picker";
 import { localDate, selectEvents } from "@/lib/time";
 import { currencyLabel, money, splitAmount } from "@/lib/money";
 import { api } from "@/lib/api";
-import { Sheet } from "./ui";
+import { SheetForm, SheetFooter, Sheet } from "./ui";
 export function ExpenseEditor({
   expense,
   data,
@@ -114,7 +114,7 @@ export function ExpenseEditor({
       title={expense ? "编辑支出" : "新增支出"}
       className="expense-sheet"
     >
-      <form className="expense-form" onSubmit={save}>
+      <SheetForm className="expense-form" onSubmit={save}>
         <div className="amount-entry">
           <label>
             金额
@@ -237,48 +237,50 @@ export function ExpenseEditor({
           </p>
         </fieldset>
         <ReceiptPicker receipts={receipts} disabled={busy} onError={setError} />
-        {error && (
-          <p role="alert" className="error-message">
-            {error}
-          </p>
-        )}
-        <button
-          className="primary-button w-full"
-          disabled={busy || receipts.uploading}
-        >
-          {receipts.uploading ? (
-            <>凭证上传中…</>
-          ) : busy ? (
-            <LoaderCircle className="animate-spin" size={18} />
-          ) : (
-            <>
-              <Check size={18} />
-              {expense ? "保存修改" : "保存支出"}
-            </>
+        <SheetFooter>
+          {error && (
+            <p role="alert" className="error-message">
+              {error}
+            </p>
           )}
-        </button>
-        {expense &&
-          (confirmDelete ? (
-            <div className="delete-confirm">
-              <p>确定删除这笔支出吗？删除后无法撤销。</p>
-              <button type="button" disabled={busy} onClick={remove}>
-                确认删除
+          <button
+            className="primary-button w-full"
+            disabled={busy || receipts.uploading}
+          >
+            {receipts.uploading ? (
+              <>凭证上传中…</>
+            ) : busy ? (
+              <LoaderCircle className="animate-spin" size={18} />
+            ) : (
+              <>
+                <Check size={18} />
+                {expense ? "保存修改" : "保存支出"}
+              </>
+            )}
+          </button>
+          {expense &&
+            (confirmDelete ? (
+              <div className="delete-confirm">
+                <p>确定删除这笔支出吗？删除后无法撤销。</p>
+                <button type="button" disabled={busy} onClick={remove}>
+                  确认删除
+                </button>
+                <button type="button" onClick={() => setConfirmDelete(false)}>
+                  取消
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="danger-button"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 size={16} />
+                删除这笔支出
               </button>
-              <button type="button" onClick={() => setConfirmDelete(false)}>
-                取消
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="danger-button"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2 size={16} />
-              删除这笔支出
-            </button>
-          ))}
-      </form>
+            ))}
+        </SheetFooter>
+      </SheetForm>
     </Sheet>
   );
 }

@@ -14,7 +14,7 @@ import type { FileTile } from "../files/file-tiles";
 import { DocumentRow, DocumentPreview } from "../views/documents";
 import { uploadFile, validateFiles } from "@/lib/files/upload";
 import { api } from "@/lib/api";
-import { Sheet } from "../ui";
+import { SheetFooter, Sheet } from "../ui";
 export function PersonalDocuments({
   data,
   onRefresh,
@@ -224,13 +224,15 @@ export function PersonalDocuments({
         >
           <div className="personal-delete">
             <p>确定删除这份证件图片吗？</p>
-            <button
-              className="primary-button w-full"
-              disabled={deleting}
-              onClick={() => void remove()}
-            >
-              确认删除证件
-            </button>
+            <SheetFooter>
+              <button
+                className="primary-button w-full"
+                disabled={deleting}
+                onClick={() => void remove()}
+              >
+                确认删除证件
+              </button>
+            </SheetFooter>
           </div>
         </Sheet>
       )}

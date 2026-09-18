@@ -87,7 +87,7 @@ test("活动只需名称和日期；住宿、上传关联、头像与昵称保�
   ).not.toBe("none");
   await expect(page.locator(".event-document-section")).toBeVisible();
   const fixedHeight = await page.getByRole("dialog").boundingBox();
-  expect(fixedHeight!.height).toBeCloseTo(640, 0);
+  expect(fixedHeight!.height).toBeLessThanOrEqual(844 * 0.92 + 1);
   expect(
     await page
       .locator(".event-entry-sheet > .sheet-body")

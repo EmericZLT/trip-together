@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Sheet } from "../ui";
+import { SheetForm, SheetFooter, Sheet } from "../ui";
 import { Field } from "../editors/fields";
 export function PreparationEditor({
   groups,
@@ -45,7 +45,7 @@ export function PreparationEditor({
       title="添加准备事项"
       onClose={() => !busy && onClose()}
     >
-      <form
+      <SheetForm
         className="editor-form"
         onSubmit={(e) => {
           e.preventDefault();
@@ -94,9 +94,11 @@ export function PreparationEditor({
           </p>
         )}
         {notice && <p role="status">{notice}</p>}
-        <button className="primary-button" disabled={busy}>
-          {busy ? "正在添加…" : "添加准备事项"}
-        </button>
+        <SheetFooter>
+          <button className="primary-button" disabled={busy}>
+            {busy ? "正在添加…" : "添加准备事项"}
+          </button>
+        </SheetFooter>
         <details className="optional-details">
           <summary>从常用清单快速添加</summary>
           <div className="optional-fields">
@@ -120,7 +122,7 @@ export function PreparationEditor({
             ))}
           </div>
         </details>
-      </form>
+      </SheetForm>
     </Sheet>
   );
 }

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { TripDocument } from "@/lib/models";
 import { DocumentUpload, DeleteDocument } from "../files/document-manager";
-import { Sheet } from "../ui";
+import { SheetFooter, Sheet } from "../ui";
 function documentTitle(doc: TripDocument) {
   return doc.name;
 }
@@ -206,7 +206,7 @@ export function DocumentPreview({
       wide
       className="document-sheet"
     >
-      <div className="preview-actions">
+      <SheetFooter className="preview-actions">
         <a
           className="secondary-button"
           target="_blank"
@@ -224,7 +224,7 @@ export function DocumentPreview({
           <Download size={16} />
           下载
         </a>
-      </div>
+      </SheetFooter>
       <div className="document-preview presenting">
         {doc.mime === "application/pdf" ? (
           <iframe

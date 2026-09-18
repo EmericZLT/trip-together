@@ -14,7 +14,7 @@ import { api } from "@/lib/api";
 import { TripManagement } from "./management";
 import { TripForm } from "./trip-form";
 import { zoneName } from "@/lib/time";
-import { Sheet } from "../ui";
+import { SheetForm, SheetFooter, Sheet } from "../ui";
 export function TripList({
   data,
   selected,
@@ -162,7 +162,7 @@ export function TripList({
       )}
       {joining && (
         <Sheet open title="加入行程" onClose={() => !busy && setJoining(false)}>
-          <form className="editor-form trip-join-form" onSubmit={join}>
+          <SheetForm className="editor-form trip-join-form" onSubmit={join}>
             <div className="trip-form-intro">
               <Ticket size={24} />
               <p>
@@ -192,11 +192,13 @@ export function TripList({
                   {error}
                 </p>
               )}
-              <button className="primary-button" disabled={busy}>
-                {busy ? "正在加入…" : "确认加入行程"}
-              </button>
+              <SheetFooter>
+                <button className="primary-button" disabled={busy}>
+                  {busy ? "正在加入…" : "确认加入行程"}
+                </button>
+              </SheetFooter>
             </div>
-          </form>
+          </SheetForm>
         </Sheet>
       )}
     </main>

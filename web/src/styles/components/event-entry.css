@@ -167,33 +167,6 @@
   }
 }
 
-.event-entry-sheet {
-  height: min(640px, 86dvh);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.event-entry-sheet .sheet-handle,
-.event-entry-sheet .sheet-header {
-  flex-shrink: 0;
-}
-.event-entry-sheet > .sheet-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.event-entry-sheet > .sheet-body > .editor-form {
-  min-height: 100%;
-  box-sizing: border-box;
-}
-.event-entry-sheet .entry-step-actions {
-  margin-top: auto;
-  padding-bottom: 4px;
-}
-.event-entry-sheet:not(.compact-event) .editor-form > .primary-button {
-  margin-top: auto;
-}
 .event-document-section h3 {
   display: flex;
   align-items: center;

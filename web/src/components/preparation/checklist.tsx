@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Check, ChevronDown, Trash2 } from "lucide-react";
 import type { PreparationItem } from "@/lib/models";
 import { api } from "@/lib/api";
-import { Sheet } from "../ui";
+import { SheetFooter, Sheet } from "../ui";
 import { PreparationEditor } from "./preparation-editor";
 export function PreparationChecklist({
   items,
@@ -132,16 +132,18 @@ export function PreparationChecklist({
         >
           <div className="editor-form">
             <p>删除「{removing.title}」及所有成员对此项的勾选记录？</p>
-            <button
-              className="primary-button"
-              disabled={busy}
-              onClick={async () => {
-                if (await action(`/preparation/${removing.id}`, "DELETE"))
-                  setRemoving(null);
-              }}
-            >
-              确认删除
-            </button>
+            <SheetFooter>
+              <button
+                className="primary-button"
+                disabled={busy}
+                onClick={async () => {
+                  if (await action(`/preparation/${removing.id}`, "DELETE"))
+                    setRemoving(null);
+                }}
+              >
+                确认删除
+              </button>
+            </SheetFooter>
           </div>
         </Sheet>
       )}

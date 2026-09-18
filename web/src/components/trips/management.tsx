@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { TripData } from "@/lib/models";
 import { api } from "@/lib/api";
-import { Sheet } from "../ui";
+import { SheetFooter, Sheet } from "../ui";
 import { TripForm } from "./trip-form";
 export function TripManagement({
   data,
@@ -214,26 +214,28 @@ export function TripManagement({
               撤销后，现有口令不能继续加入此行程。已经加入的成员不会受到影响。
             </p>
             {error && <p role="alert">{error}</p>}
-            <button
-              className="primary-button"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                setError("");
-                try {
-                  await api(invitePath, { method: "DELETE" });
-                  setInvite("");
-                  setNotice("邀请已经全部撤销");
-                  setRevoking(false);
-                } catch (e) {
-                  setError((e as Error).message);
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              确认撤销邀请
-            </button>
+            <SheetFooter>
+              <button
+                className="primary-button"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setError("");
+                  try {
+                    await api(invitePath, { method: "DELETE" });
+                    setInvite("");
+                    setNotice("邀请已经全部撤销");
+                    setRevoking(false);
+                  } catch (e) {
+                    setError((e as Error).message);
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                确认撤销邀请
+              </button>
+            </SheetFooter>
           </div>
         </Sheet>
       )}
@@ -257,27 +259,29 @@ export function TripManagement({
               />
             </label>
             {error && <p role="alert">{error}</p>}
-            <button
-              className="primary-button"
-              disabled={busy || confirmation !== data.trip.title}
-              onClick={async () => {
-                setBusy(true);
-                setError("");
-                try {
-                  await api(`/trips/${data.trip.id}`, {
-                    method: "DELETE",
-                    body: JSON.stringify({ title: confirmation }),
-                  });
-                  await onDeleted();
-                } catch (e) {
-                  setError((e as Error).message);
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              确认删除整个行程
-            </button>
+            <SheetFooter>
+              <button
+                className="primary-button"
+                disabled={busy || confirmation !== data.trip.title}
+                onClick={async () => {
+                  setBusy(true);
+                  setError("");
+                  try {
+                    await api(`/trips/${data.trip.id}`, {
+                      method: "DELETE",
+                      body: JSON.stringify({ title: confirmation }),
+                    });
+                    await onDeleted();
+                  } catch (e) {
+                    setError((e as Error).message);
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                确认删除整个行程
+              </button>
+            </SheetFooter>
           </div>
         </Sheet>
       )}

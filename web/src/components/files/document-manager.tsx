@@ -3,7 +3,7 @@ import { useId, useRef, useState } from "react";
 import type { TripDocument } from "@/lib/models";
 import { api, apiUrl } from "@/lib/api";
 import { uploadFile } from "@/lib/files/upload";
-import { Sheet } from "../ui";
+import { SheetForm, SheetFooter, Sheet } from "../ui";
 import { FilePreview } from "./file-preview";
 type UploadItem = {
   id: string;
@@ -102,7 +102,7 @@ export function DocumentUpload({
       title="上传旅行资料"
       onClose={() => !busy && onClose()}
     >
-      <form className="editor-form" onSubmit={save}>
+      <SheetForm className="editor-form" onSubmit={save}>
         <label>
           资料分类
           <input
@@ -225,33 +225,35 @@ export function DocumentUpload({
               : "当前行程的同行成员可以查看，请勿上传私人证件。"}
           </p>
         </details>
-        {error && (
-          <p role="alert" className="error-message">
-            {error}
-          </p>
-        )}
-        {busy && (
-          <button
-            type="button"
-            className="text-action"
-            onClick={() => {
-              cancelled.current = true;
-              cancel.current?.();
-            }}
-          >
-            暂停上传
+        <SheetFooter>
+          {error && (
+            <p role="alert" className="error-message">
+              {error}
+            </p>
+          )}
+          {busy && (
+            <button
+              type="button"
+              className="text-action"
+              onClick={() => {
+                cancelled.current = true;
+                cancel.current?.();
+              }}
+            >
+              暂停上传
+            </button>
+          )}
+          <button className="primary-button" disabled={busy || !items.length}>
+            {busy
+              ? "正在上传…"
+              : remaining.length
+                ? items.some((i) => i.error)
+                  ? "重试未完成的文件"
+                  : `上传 ${remaining.length} 份资料`
+                : "完成"}
           </button>
-        )}
-        <button className="primary-button" disabled={busy || !items.length}>
-          {busy
-            ? "正在上传…"
-            : remaining.length
-              ? items.some((i) => i.error)
-                ? "重试未完成的文件"
-                : `上传 ${remaining.length} 份资料`
-              : "完成"}
-        </button>
-      </form>
+        </SheetFooter>
+      </SheetForm>
     </Sheet>
   );
 }
@@ -271,24 +273,26 @@ export function DeleteDocument({
       <div className="editor-form">
         <p>确认删除「{doc.name}」？相关事项将不再关联这份文件。</p>
         {error && <p role="alert">{error}</p>}
-        <button
-          className="primary-button"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            try {
-              await api(`/documents/${doc.id}`, { method: "DELETE" });
-              await onSaved();
-              onClose();
-            } catch (e) {
-              setError((e as Error).message);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          确认删除资料
-        </button>
+        <SheetFooter>
+          <button
+            className="primary-button"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await api(`/documents/${doc.id}`, { method: "DELETE" });
+                await onSaved();
+                onClose();
+              } catch (e) {
+                setError((e as Error).message);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            确认删除资料
+          </button>
+        </SheetFooter>
       </div>
     </Sheet>
   );

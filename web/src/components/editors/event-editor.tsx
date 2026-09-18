@@ -4,7 +4,7 @@ import type { TripData, TripEvent, TripDocument } from "@/lib/models";
 import { api } from "@/lib/api";
 import { localInput, zonedChoices } from "@/lib/zoned-input";
 import { localDate } from "@/lib/time";
-import { Sheet, EventIcon } from "../ui";
+import { SheetForm, SheetFooter, Sheet, EventIcon } from "../ui";
 import { Field } from "./fields";
 import {
   EventTimeFields,
@@ -173,7 +173,7 @@ export function EventEditor({
       }
       onClose={() => !busy && onClose()}
     >
-      <form className="editor-form" onSubmit={save}>
+      <SheetForm className="editor-form" onSubmit={save}>
         <p className="entry-step" aria-live="polite">
           {step === 1
             ? "1 / 2 · 选择事项类型"
@@ -198,13 +198,16 @@ export function EventEditor({
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => setStep(2)}
-            >
-              下一步
-            </button>
+            <SheetFooter>
+              {" "}
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => setStep(2)}
+              >
+                下一步
+              </button>
+            </SheetFooter>
           </>
         ) : (
           <>
@@ -330,7 +333,7 @@ export function EventEditor({
                 {error}
               </p>
             )}
-            <div className="entry-step-actions sticky-save">
+            <SheetFooter className="entry-step-actions">
               <button
                 type="button"
                 className="secondary-button"
@@ -349,10 +352,10 @@ export function EventEditor({
                     ? "保存修改"
                     : `添加${kinds[v.kind]}`}
               </button>
-            </div>
+            </SheetFooter>
           </>
         )}
-      </form>
+      </SheetForm>
       {uploading && (
         <DocumentUpload
           categories={docs.map((d) => d.category)}

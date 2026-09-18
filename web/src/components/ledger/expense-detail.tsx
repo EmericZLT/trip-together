@@ -14,7 +14,7 @@ import type { Expense, TripData } from "@/lib/models";
 import { currencyLabel, money, splitAmount } from "@/lib/money";
 import { api } from "@/lib/api";
 import { Avatar } from "../avatar";
-import { Sheet } from "../ui";
+import { SheetFooter, Sheet } from "../ui";
 import { FileTiles } from "../files/file-tiles";
 export function ExpenseDetail({
   expense,
@@ -157,7 +157,7 @@ export function ExpenseDetail({
           </details>
         )}
       </div>
-      <footer className="expense-detail-actions">
+      <SheetFooter className="expense-detail-actions">
         {error && (
           <p role="alert" className="error-message">
             {error}
@@ -222,7 +222,7 @@ export function ExpenseDetail({
             </button>
           </div>
         )}
-      </footer>
+      </SheetFooter>
     </Sheet>
   );
 }

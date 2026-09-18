@@ -10,7 +10,7 @@ import { Compass, RefreshCw } from "lucide-react";
 import type { TripData, TripDocument, TripEvent } from "@/lib/models";
 import { api, ApiError } from "@/lib/api";
 import { EventEditor } from "../editors/event-editor";
-import { Sheet } from "../ui";
+import { SheetFooter, Sheet } from "../ui";
 import { Today } from "../views/today";
 import { Itinerary, EventDetail } from "../views/itinerary";
 import { Documents, DocumentPreview } from "../views/documents";
@@ -234,27 +234,29 @@ export function TripWorkspace({
         >
           <div className="editor-form">
             <p>确定删除「{deletingEvent.title}」吗？关联文件会保留。</p>
-            <button
-              className="primary-button"
-              disabled={deleting}
-              onClick={async () => {
-                setDeleting(true);
-                try {
-                  await api(`/events/${deletingEvent.id}`, {
-                    method: "DELETE",
-                    body: JSON.stringify({ version: deletingEvent.version }),
-                  });
-                  setDeletingEvent(null);
-                  await refresh();
-                } catch (e) {
-                  setError((e as Error).message);
-                } finally {
-                  setDeleting(false);
-                }
-              }}
-            >
-              确认删除事项
-            </button>
+            <SheetFooter>
+              <button
+                className="primary-button"
+                disabled={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await api(`/events/${deletingEvent.id}`, {
+                      method: "DELETE",
+                      body: JSON.stringify({ version: deletingEvent.version }),
+                    });
+                    setDeletingEvent(null);
+                    await refresh();
+                  } catch (e) {
+                    setError((e as Error).message);
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+              >
+                确认删除事项
+              </button>
+            </SheetFooter>
           </div>
         </Sheet>
       )}

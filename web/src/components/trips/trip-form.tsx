@@ -8,7 +8,7 @@ import {
   readableZone,
   type Destination,
 } from "../../../../shared/travel-options";
-import { Sheet } from "../ui";
+import { SheetForm, SheetFooter, Sheet } from "../ui";
 import { Field, ZoneField, CurrencyField } from "../editors/fields";
 import { DestinationPicker } from "./destination-picker";
 export function TripForm({
@@ -114,7 +114,7 @@ export function TripForm({
       title={trip ? "行程设置" : "创建行程"}
       onClose={() => !busy && onClose()}
     >
-      <form className="editor-form" onSubmit={save}>
+      <SheetForm className="editor-form" onSubmit={save}>
         <DestinationPicker value={places} onChange={changePlaces} />
         <fieldset>
           <legend>旅行日期</legend>
@@ -184,10 +184,12 @@ export function TripForm({
             {error}
           </p>
         )}
-        <button className="primary-button" disabled={busy}>
-          {busy ? "正在保存…" : trip ? "保存行程" : "创建行程"}
-        </button>
-      </form>
+        <SheetFooter>
+          <button className="primary-button" disabled={busy}>
+            {busy ? "正在保存…" : trip ? "保存行程" : "创建行程"}
+          </button>
+        </SheetFooter>
+      </SheetForm>
     </Sheet>
   );
 }

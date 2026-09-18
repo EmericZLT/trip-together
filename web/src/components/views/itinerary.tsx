@@ -20,7 +20,7 @@ import {
   eventEndDate,
 } from "@/lib/time";
 import { TravelSticker } from "../travel-sticker";
-import { EventIcon, Sheet, SectionTitle } from "../ui";
+import { EventIcon, SheetFooter, Sheet, SectionTitle } from "../ui";
 import { PreparationChecklist } from "../preparation/checklist";
 import { EventEditor } from "../editors/event-editor";
 import { api } from "@/lib/api";
@@ -307,14 +307,14 @@ export function EventDetail({
           </div>
         )}
         <p className="source-note">资料来源：{event.source || "手动添加"}</p>
-        <div className="form-actions">
+        <SheetFooter>
           <button className="secondary-button" onClick={() => onEdit(event)}>
             修改事项
           </button>
           <button className="secondary-button" onClick={() => onDelete(event)}>
             删除事项
           </button>
-        </div>
+        </SheetFooter>
       </div>
     </Sheet>
   );

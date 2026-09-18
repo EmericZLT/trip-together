@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { Profile } from "@/lib/models";
 import { api } from "@/lib/api";
 import { uploadFile, validateFiles } from "@/lib/files/upload";
-import { Sheet } from "../ui";
+import { SheetForm, SheetFooter, Sheet } from "../ui";
 import { Avatar } from "../avatar";
 import { Field } from "../editors/fields";
 export function ProfileEditor({
@@ -64,7 +64,7 @@ export function ProfileEditor({
   }
   return (
     <Sheet open title="编辑个人资料" onClose={() => !busy && onClose()}>
-      <form className="editor-form" onSubmit={save}>
+      <SheetForm className="editor-form" onSubmit={save}>
         <p className="muted">昵称和头像供同行成员查看，证件信息仅本人可见。</p>
         <Field
           label="昵称"
@@ -94,9 +94,11 @@ export function ProfileEditor({
             {error}
           </p>
         )}
-        <button className="primary-button" disabled={busy}>
-          保存个人资料
-        </button>
+        <SheetFooter>
+          <button className="primary-button" disabled={busy}>
+            保存个人资料
+          </button>
+        </SheetFooter>
         <div className="optional-fields">
           <Avatar member={v} className="profile-avatar" />
           <label>
@@ -126,7 +128,7 @@ export function ProfileEditor({
           ) : null}
           <small>头像修改后立即生效，其他资料可以继续填写。</small>
         </div>
-      </form>
+      </SheetForm>
     </Sheet>
   );
 }
@@ -151,15 +153,17 @@ export function PasswordEditor({
       {saved ? (
         <div className="editor-form">
           <p>密码已经更新，请使用新密码重新登录。</p>
-          <button
-            className="primary-button"
-            onClick={() => void onLogout().catch(() => location.reload())}
-          >
-            重新登录
-          </button>
+          <SheetFooter>
+            <button
+              className="primary-button"
+              onClick={() => void onLogout().catch(() => location.reload())}
+            >
+              重新登录
+            </button>
+          </SheetFooter>
         </div>
       ) : (
-        <form
+        <SheetForm
           className="editor-form"
           onSubmit={async (e) => {
             e.preventDefault();
@@ -194,10 +198,12 @@ export function PasswordEditor({
           />
           <small>至少 10 个字符，区分大小写。</small>
           {error && <p role="alert">{error}</p>}
-          <button className="primary-button" disabled={busy}>
-            保存新密码
-          </button>
-        </form>
+          <SheetFooter>
+            <button className="primary-button" disabled={busy}>
+              保存新密码
+            </button>
+          </SheetFooter>
+        </SheetForm>
       )}
     </Sheet>
   );
