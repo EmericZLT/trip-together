@@ -1,20 +1,11 @@
+import { TOTALS_SELECT } from "./totals";
 import { equal } from "../accounts/password";
 import { HttpError, json } from "../http";
 import type { AnalyticsEnv } from "./config";
 export async function productSummary(env: AnalyticsEnv) {
   const metrics = await env.DB.prepare(
     `SELECT
-    (SELECT count(*) FROM members) AS users,
-    (SELECT count(*) FROM members WHERE email_verified_at IS NOT NULL) AS verified_users,
-    (SELECT count(DISTINCT owner_id) FROM trips) AS trip_creators,
-    (SELECT count(*) FROM trips) AS trips,
-    (SELECT count(*) FROM events) AS events,
-    (SELECT count(*) FROM events WHERE json_extract(data,'$.kind')='explore') AS activities,
-    (SELECT count(*) FROM (SELECT trip_id FROM trip_members GROUP BY trip_id HAVING count(*)>=2)) AS multiplayer_trips,
-    (SELECT count(DISTINCT trip_id) FROM events) AS planned_trips,
-    (SELECT count(DISTINCT member_id) FROM trip_members) AS trip_members,
-    (SELECT count(*) FROM documents WHERE trip_id IS NOT NULL) AS documents,
-    (SELECT count(*) FROM expenses) AS expenses,
+    ${TOTALS_SELECT},
     (SELECT count(DISTINCT actor_id) FROM analytics_events WHERE actor_id NOT LIKE 'anonymous:%' AND created_at>=unixepoch()-86400) AS active_1d,
     (SELECT count(DISTINCT actor_id) FROM analytics_events WHERE actor_id NOT LIKE 'anonymous:%' AND created_at>=unixepoch()-604800) AS active_7d,
     (SELECT count(DISTINCT actor_id) FROM analytics_events WHERE actor_id NOT LIKE 'anonymous:%' AND created_at>=unixepoch()-2592000) AS active_30d,

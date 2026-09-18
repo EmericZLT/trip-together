@@ -63,7 +63,7 @@ export const dashboard = {
     },
   ],
   notes: [
-    "当前总量读取受保护的 /api/analytics/summary，包含历史数据；不能用访问人数替代注册人数。",
+    "业务事件 total_* 属性包含历史全量，按照 totals_sampled_at 取最新样本，禁止求和或取最大值；/api/analytics/summary 可实时核验。",
     "此处报告仅覆盖开始采集后的行为。多人行程表示至少两位成员实际加入。",
     "事件至少一次投递；极少数网络故障可能重复，delivery_id 用于排查。",
     "首次使用漏斗用于新注册且自己创建行程的人；加入他人行程的用户单独分析 trip_joined。",

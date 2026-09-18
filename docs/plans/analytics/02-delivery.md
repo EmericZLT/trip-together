@@ -24,3 +24,5 @@
 ## 交付物
 
 worker/analytics、浏览端采集模块与测试。
+
+业务节点全量：由后台批次查询并保存到事件 data.totals，首次发送前持久保存；失败重试保留快照。采样与发送不进入认证请求，total_* 使用与 summary 相同的 SQL 口径，totals_sampled_at 与业务时间分别记录。

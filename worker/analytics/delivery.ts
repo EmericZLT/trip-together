@@ -1,3 +1,9 @@
+import {
+  readTotals,
+  snapshotEvents,
+  totalProperties,
+  type Totals,
+} from "./totals";
 import { analyticsConfig, anonymousId, type AnalyticsEnv } from "./config";
 type Row = {
   id: string;
@@ -20,6 +26,8 @@ export async function deliverEvents(env: AnalyticsEnv) {
   )
     .bind(lease, now + 120, now, now, now)
     .all<Row>();
+  // At most one full-count query per batch, shared by concurrent sends.
+  let totals: Promise<Totals> | undefined;
   let sent = 0,
     failed = 0;
   const process = async (row: Row) => {
@@ -34,6 +42,20 @@ export async function deliverEvents(env: AnalyticsEnv) {
       for (const field of ["kind", "visibility", "format", "page", "step"])
         if (["string", "number"].includes(typeof metadata[field]))
           data[field] = metadata[field];
+      if (snapshotEvents.has(row.name)) {
+        if (!metadata.totals) {
+          totals ??= readTotals(env);
+          metadata.totals = await totals;
+          // Persist before contacting OpenPanel: retries must not change the sample.
+          const saved = await env.DB.prepare(
+            "UPDATE analytics_events SET data=? WHERE id=? AND lease_token=?",
+          )
+            .bind(JSON.stringify(metadata), row.id, lease)
+            .run();
+          if (saved.meta.changes !== 1) throw new Error("Analytics lease lost");
+        }
+        Object.assign(data, totalProperties(metadata.totals));
+      }
       if (row.entity_id)
         data.entity = await anonymousId(config.key, `entity:${row.entity_id}`);
       const profileId = await anonymousId(
