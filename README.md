@@ -21,7 +21,35 @@ npm run dev:backend
 NEXT_PUBLIC_API_URL=http://localhost:8790 npm run dev:web
 ```
 
-打开 http://localhost:3000。后端 http://localhost:8790/health。首次启动会在 `data/` 创建空白 SQLite，不导入任何用户数据。
+打开 http://localhost:3000。后端 http://localhost:8790/health。首次启动会在 `data/` 创建空白 SQLite。
+
+## 写入本次南北岛行程与四人账号
+
+账本没有单独的「管理员开关」。创建者把四人都加入同一行程后，用自己的账号打开账本，就可以预填机票、租车、活动等已垫付款；付款人选实际出钱的人，分摊勾选四人。成员之后在「我的」修改密码即可。
+
+不要把真实邮箱和密码提交到 Git。`data/` 已被忽略。
+
+```bash
+mkdir -p data
+cp scripts/seed-members.example.json data/seed-members.json
+# 编辑四人邮箱、至少 10 位的初始密码、姓名；仅一名 owner: true
+npm run seed
+```
+
+可选：复制 `scripts/seed-expenses.example.json` 为 `data/seed-expenses.json`。金额单位是分，例如 `1280000` 表示 12800.00 元。不确定的费用不要写进文件，登录后在账本里填更合适。
+
+重复运行会更新行程事项，不会覆盖已有账本（除非你在费用文件里新增）。若要重置初始密码，使用 `npm run seed -- --reset-passwords`。
+
+Render 上线后可用一次性接口（需设置环境变量 `SEED_TOKEN`）：
+
+```bash
+curl -X POST https://your-service.onrender.com/api/setup/seed \
+  -H "content-type: application/json" \
+  -H "x-seed-token: $SEED_TOKEN" \
+  -d @data/seed-members.json
+```
+
+若把成员写在 JSON 文件根级数组，请改成 `{"members":[...],"expenses":[]}` 再 POST。
 
 ## 使用流程
 

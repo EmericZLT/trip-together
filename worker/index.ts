@@ -18,7 +18,7 @@ import { tripRouter } from "./trips/router";
 import { updateProfile, changePassword } from "./accounts/profile";
 import { personalDocument } from "./storage/personal-documents";
 import { fileResponse } from "./files";
-import { avatarResponse, uploadAvatar } from "./avatars";
+import { seedFromRequest } from "../backend/seed.ts";
 
 export async function handleApi(request: Request, env: Env): Promise<Response> {
   try {
@@ -26,6 +26,8 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
       path = url.pathname,
       method = request.method;
     if (!path.startsWith("/api/")) return json({ error: "接口不存在" }, 404);
+    if (path === "/api/setup/seed" && method === "POST")
+      return secure(await seedFromRequest(request, env));
     if (!["GET", "HEAD"].includes(method)) sameOrigin(request, env);
     if (path === "/api/analytics/config" && method === "GET")
       return secure(json({ enabled: Boolean(analyticsConfig(env)) }));

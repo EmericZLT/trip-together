@@ -43,5 +43,6 @@ declare global {
     OPENPANEL_ORIGIN: string;
     OPENPANEL_CLIENT_ID: string;
     OPENPANEL_CLIENT_SECRET?: string;
+    SEED_TOKEN: string;
   }
 }

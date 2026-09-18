@@ -1,0 +1,298 @@
+const NZ = "Pacific/Auckland";
+const CN = "Asia/Shanghai";
+
+function nzOffset(date: string) {
+  return date >= "2026-09-27" ? "+13:00" : "+12:00";
+}
+
+function iso(date: string, time: string, zone: "nz" | "cn") {
+  const offset = zone === "cn" ? "+08:00" : nzOffset(date);
+  return `${date}T${time}:00${offset}`;
+}
+
+function event(
+  input: Record<string, unknown> & {
+    title: string;
+    kind: "flight" | "drive" | "stay" | "explore" | "transfer";
+    start: string;
+    end: string;
+    timezone: string;
+  },
+) {
+  return {
+    subtitle: "",
+    certainty: "suggested" as const,
+    place: "",
+    address: "",
+    phone: "",
+    source: "南北岛综合行程",
+    note: "",
+    documents: [] as string[],
+    from: "",
+    to: "",
+    code: "",
+    timeMode: "timed" as const,
+    endUnspecified: false,
+    ...input,
+  };
+}
+
+export const tripMeta = {
+  title: "2026 南北岛自驾",
+  start_date: "2026-09-24",
+  end_date: "2026-10-09",
+  timezone: NZ,
+  home_timezone: CN,
+  currency: "NZD" as const,
+  home_currency: "CNY" as const,
+  destinations: [
+    { name: "奥克兰 · 新西兰", timezone: NZ, currency: "NZD" as const },
+    { name: "Nelson", timezone: NZ, currency: "NZD" as const },
+    { name: "Lake Tekapo", timezone: NZ, currency: "NZD" as const },
+    { name: "Wanaka", timezone: NZ, currency: "NZD" as const },
+    { name: "Te Anau", timezone: NZ, currency: "NZD" as const },
+    { name: "皇后镇 · 新西兰", timezone: NZ, currency: "NZD" as const },
+  ],
+};
+
+export function itineraryEvents() {
+  return [
+    event({
+      title: "上海 ✈️ 奥克兰",
+      kind: "flight",
+      timezone: CN,
+      endTimezone: NZ,
+      start: iso("2026-09-24", "14:00", "cn"),
+      end: iso("2026-09-25", "08:30", "nz"),
+      from: "上海浦东",
+      to: "Auckland",
+      note: "下午出发。抵达时刻以机票为准。",
+    }),
+    event({
+      title: "奥克兰市区与 Mt Eden",
+      kind: "explore",
+      timezone: NZ,
+      start: iso("2026-09-25", "09:30", "nz"),
+      end: iso("2026-09-25", "18:00", "nz"),
+      place: "Auckland",
+      note: "提车、Mission Bay 或海港区休整，下午 Mt Eden。",
+    }),
+    event({
+      title: "奥克兰住宿",
+      kind: "stay",
+      timezone: NZ,
+      timeMode: "date",
+      dateEnd: "2026-09-26",
+      start: iso("2026-09-25", "00:00", "nz"),
+      end: iso("2026-09-27", "00:00", "nz"),
+      place: "Auckland",
+    }),
+    event({
+      title: "Hobbiton 与 Blue Spring",
+      kind: "explore",
+      timezone: NZ,
+      start: iso("2026-09-26", "08:00", "nz"),
+      end: iso("2026-09-26", "18:30", "nz"),
+      from: "Auckland",
+      to: "Auckland",
+      note: "Hobbiton 10:40 场次。晚高峰前折返奥克兰。",
+    }),
+    event({
+      title: "奥克兰 ✈️ Nelson",
+      kind: "flight",
+      timezone: NZ,
+      start: iso("2026-09-27", "09:00", "nz"),
+      end: iso("2026-09-27", "12:20", "nz"),
+      from: "Auckland",
+      to: "Nelson",
+      note: "12:20 抵达 Nelson，约 13:00 取车。",
+    }),
+    event({
+      title: "Nelson 前往 Parapara",
+      kind: "drive",
+      timezone: NZ,
+      start: iso("2026-09-27", "13:00", "nz"),
+      end: iso("2026-09-27", "15:30", "nz"),
+      from: "Nelson",
+      to: "Parapara",
+      note: "约 120 km / 导航 2 小时。可在 Richmond 超市补给。",
+    }),
+    event({
+      title: "Parapara 住宿",
+      kind: "stay",
+      timezone: NZ,
+      timeMode: "date",
+      dateEnd: "2026-09-28",
+      start: iso("2026-09-27", "00:00", "nz"),
+      end: iso("2026-09-29", "00:00", "nz"),
+      place: "Parapara",
+      note: "连住两晚。周日晚餐 Mussel Inn；周一 Collingwood Tavern 或路上 Old School Cafe Pakawau。",
+    }),
+    event({
+      title: "Wharariki Beach",
+      kind: "explore",
+      timezone: NZ,
+      start: iso("2026-09-28", "10:00", "nz"),
+      end: iso("2026-09-28", "16:30", "nz"),
+      place: "Wharariki Beach",
+      note: "低潮约 16:00。天气看 Takaka Extended 的雨日判断，沙滩风会更大。",
+    }),
+    event({
+      title: "Golden Bay 前往 Lake Tekapo",
+      kind: "drive",
+      timezone: NZ,
+      start: iso("2026-09-29", "08:00", "nz"),
+      end: iso("2026-09-29", "16:30", "nz"),
+      from: "Collingwood",
+      to: "Lake Tekapo",
+      note: "三人轮换驾驶，经 Lewis Pass。中继 Culverden 或 Geraldine，下午茶 Fairlie Bakehouse。",
+    }),
+    event({
+      title: "Lake Tekapo 住宿",
+      kind: "stay",
+      timezone: NZ,
+      timeMode: "date",
+      dateEnd: "2026-09-30",
+      start: iso("2026-09-29", "00:00", "nz"),
+      end: iso("2026-10-01", "00:00", "nz"),
+      place: "Lake Tekapo",
+    }),
+    event({
+      title: "Tekapo 休整天",
+      kind: "explore",
+      timezone: NZ,
+      start: iso("2026-09-30", "09:00", "nz"),
+      end: iso("2026-09-30", "18:00", "nz"),
+      place: "Lake Tekapo",
+      note: "好牧羊人教堂、Mt John 可开车到顶。",
+    }),
+    event({
+      title: "Mt Cook 冰川飞行与 Hooker Valley",
+      kind: "explore",
+      timezone: NZ,
+      start: iso("2026-10-01", "07:00", "nz"),
+      end: iso("2026-10-01", "17:00", "nz"),
+      from: "Lake Tekapo",
+      to: "Twizel",
+      note: "08:45 前到 Mt Cook Airport。傍晚住 Twizel。",
+    }),
+    event({
+      title: "Twizel 住宿",
+      kind: "stay",
+      timezone: NZ,
+      timeMode: "date",
+      dateEnd: "2026-10-01",
+      start: iso("2026-10-01", "00:00", "nz"),
+      end: iso("2026-10-02", "00:00", "nz"),
+      place: "Twizel",
+    }),
+    event({
+      title: "Lake Ōhau 前往 Lake Hawea",
+      kind: "drive",
+      timezone: NZ,
+      start: iso("2026-10-02", "09:30", "nz"),
+      end: iso("2026-10-02", "14:00", "nz"),
+      from: "Twizel",
+      to: "Lake Hawea",
+      note: "经 Lindis Pass。Ōhau 适合湖边停留，不必爬山。",
+    }),
+    event({
+      title: "Lake Hawea 住宿",
+      kind: "stay",
+      timezone: NZ,
+      timeMode: "date",
+      dateEnd: "2026-10-03",
+      start: iso("2026-10-02", "00:00", "nz"),
+      end: iso("2026-10-04", "00:00", "nz"),
+      place: "Lake Hawea",
+    }),
+    event({
+      title: "Isthmus Peak 与 Wanaka",
+      kind: "explore",
+      timezone: NZ,
+      start: iso("2026-10-03", "07:30", "nz"),
+      end: iso("2026-10-03", "18:00", "nz"),
+      place: "Isthmus Peak",
+      note: "Roy's Peak 产羔期关闭。Isthmus 爬升约 1100 m，也可改 Rocky Mountain Track。",
+    }),
+    event({
+      title: "前往 Te Anau",
+      kind: "drive",
+      timezone: NZ,
+      start: iso("2026-10-04", "10:00", "nz"),
+      end: iso("2026-10-04", "15:00", "nz"),
+      from: "Lake Hawea",
+      to: "Te Anau",
+      note: "Cromwell Jones Family Fruit Stall 可休息。傍晚采购次日峡湾干粮。",
+    }),
+    event({
+      title: "Te Anau 住宿",
+      kind: "stay",
+      timezone: NZ,
+      timeMode: "date",
+      dateEnd: "2026-10-05",
+      start: iso("2026-10-04", "00:00", "nz"),
+      end: iso("2026-10-06", "00:00", "nz"),
+      place: "Te Anau",
+    }),
+    event({
+      title: "Milford Sound",
+      kind: "explore",
+      timezone: NZ,
+      start: iso("2026-10-05", "08:00", "nz"),
+      end: iso("2026-10-05", "17:00", "nz"),
+      from: "Te Anau",
+      to: "Te Anau",
+      note: "SH94 无手机信号。出发前看 NZTA。沿途 Mirror Lakes、Homer Tunnel、The Chasm。",
+    }),
+    event({
+      title: "前往皇后镇",
+      kind: "drive",
+      timezone: NZ,
+      start: iso("2026-10-06", "10:00", "nz"),
+      end: iso("2026-10-06", "16:00", "nz"),
+      from: "Te Anau",
+      to: "Queenstown",
+      note: "Devil's Staircase、Queenstown Gardens、Skyline Gondola。",
+    }),
+    event({
+      title: "皇后镇住宿",
+      kind: "stay",
+      timezone: NZ,
+      timeMode: "date",
+      dateEnd: "2026-10-07",
+      start: iso("2026-10-06", "00:00", "nz"),
+      end: iso("2026-10-08", "00:00", "nz"),
+      place: "Queenstown",
+    }),
+    event({
+      title: "Glenorchy 与 Arrowtown",
+      kind: "explore",
+      timezone: NZ,
+      start: iso("2026-10-07", "09:00", "nz"),
+      end: iso("2026-10-07", "18:00", "nz"),
+      place: "Glenorchy",
+      note: "Lagoon Walkway。下午 Arrowtown。10.7 晚决定次日是否赶早航班。",
+    }),
+    event({
+      title: "皇后镇 ✈️ 奥克兰 ✈️ 上海",
+      kind: "flight",
+      timezone: NZ,
+      endTimezone: CN,
+      start: iso("2026-10-08", "12:00", "nz"),
+      end: iso("2026-10-09", "06:55", "cn"),
+      from: "Queenstown",
+      to: "上海浦东",
+      note: "上午伴手礼。ZQN 还车后衔接。具体航班时刻以机票为准。",
+    }),
+  ];
+}
+
+export const packingList = [
+  ["证件", "护照与签证页", ""],
+  ["证件", "国际驾照及翻译", ""],
+  ["装备", "转换插头", ""],
+  ["装备", "防风层与雨壳", "Golden Bay 和峡湾都会刮风"],
+  ["行前", "下载南岛 Google 离线地图", "SH94 无信号"],
+  ["行前", "确认租车取还车时间", "Nelson 取、Queenstown 还"],
+];

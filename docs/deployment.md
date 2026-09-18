@@ -22,6 +22,7 @@ SKIP_EMAIL_VERIFICATION=true
 DATA_DIR=./data
 SESSION_SIGNING_KEY=至少32个随机字符
 ALLOWED_ORIGINS=https://your-app.vercel.app,https://www.your-domain.com
+SEED_TOKEN=随机长字符串，仅用于一次性写入行程
 ```
 
 4. Health Check Path: `/health`
@@ -61,4 +62,4 @@ NEXT_PUBLIC_API_URL=https://trip-together-backend.onrender.com
 
 ## 5. 使用
 
-四人分别用邮箱注册（默认不发验证码），创建者建行程后生成 6 位口令，其余人加入。不要把护照扫描上传到资料库以外的公开位置。
+本地或 Render 启动后，用 `npm run seed`（或带 `SEED_TOKEN` 的 `/api/setup/seed`）写入四人账号和南北岛行程。创建者登录账本预填已垫付费用。成员用告知的邮箱和初始密码登录，在「我的」修改密码。不要把护照扫描上传到公开位置。

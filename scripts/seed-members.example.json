@@ -1,0 +1,24 @@
+[
+  {
+    "email": "owner@example.com",
+    "password": "change-me-now",
+    "name": "张雷霆",
+    "english_name": "Zhang Leiting",
+    "owner": true
+  },
+  {
+    "email": "member-b@example.com",
+    "password": "change-me-now",
+    "name": "成员B"
+  },
+  {
+    "email": "member-c@example.com",
+    "password": "change-me-now",
+    "name": "成员C"
+  },
+  {
+    "email": "member-d@example.com",
+    "password": "change-me-now",
+    "name": "成员D"
+  }
+]

@@ -45,5 +45,6 @@ export async function createEnv(): Promise<Env> {
     OPENPANEL_ORIGIN: process.env.OPENPANEL_ORIGIN || "",
     OPENPANEL_CLIENT_ID: process.env.OPENPANEL_CLIENT_ID || "",
     OPENPANEL_CLIENT_SECRET: process.env.OPENPANEL_CLIENT_SECRET || "",
+    SEED_TOKEN: process.env.SEED_TOKEN || "",
   } as unknown as Env;
 }
