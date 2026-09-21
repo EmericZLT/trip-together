@@ -87,12 +87,13 @@ API 测试覆盖邮箱注册、验证码、密码重置、旧账号绑定邮箱�
 详见 [部署与维护](docs/deployment.md)。推荐步骤：
 
 1. 将本仓库推送到 GitHub
-2. 在 Render 部署 Web Service，健康检查路径为 `/health`
-3. 用 UptimeRobot 每 5 分钟请求 `https://your-service.onrender.com/health`
-4. 在 Vercel 部署前端，环境变量 `NEXT_PUBLIC_API_URL` 指向 Render 地址
-5. 如需自定义域名，在 Vercel 绑定后把该域名写入 Render 的 `ALLOWED_ORIGINS`
+2. 在 Render 用 Starter + 持久盘 `/data` 部署 Web Service，健康检查路径为 `/health`
+3. 把本机 `data/trip.db` 和 `data/files` 拷到 Render 磁盘（不要只跑 seed）
+4. 用 UptimeRobot 每 5 分钟请求 `https://your-service.onrender.com/health`
+5. 在 Vercel 部署前端，环境变量 `NEXT_PUBLIC_API_URL` 指向 Render 地址
+6. 国内域名绑到 Vercel，并把该域名写入 Render 的 `ALLOWED_ORIGINS`
 
-仓库不含真实账号或行程数据。Render 免费磁盘在重新部署后可能被清空，行程填好后避免无意义的重复 Deploy。
+GitHub 不含真实账号和行程库。真实数据只存在 Render 磁盘上。
 
 ## 产品统计
 
