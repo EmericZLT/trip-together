@@ -1,18 +1,31 @@
 "use client";
 import { MemberSelect } from "../members/member-select";
 import { Avatar } from "../avatar";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   ArrowDownToLine,
   ChevronRight,
   ReceiptText,
   Info,
+  ArrowRight,
 } from "lucide-react";
 import type { Currency, Expense, TripData, TripDocument } from "@/lib/models";
-import { money, summarize, currencyLabel } from "@/lib/money";
+import {
+  money,
+  summarizeInCny,
+  currencyLabel,
+  ledgerCurrencies,
+  defaultCnyRates,
+  loadCnyRates,
+  saveCnyRates,
+  suggestSettlements,
+  isTransfer,
+  transferPayeeId,
+  type CnyRates,
+} from "@/lib/money";
 import { ExpenseDetail } from "../ledger/expense-detail";
-import { ExpenseEditor } from "../expense-editor";
+import { ExpenseEditor, type ExpenseDraft } from "../expense-editor";
 export function Ledger({
   data,
   onRefresh,
@@ -22,19 +35,43 @@ export function Ledger({
   onRefresh: () => Promise<void>;
   onDocument: (d: TripDocument) => void;
 }) {
-  const [currency, setCurrency] = useState<Currency>(data.trip.home_currency),
+  const [currency, setCurrency] = useState<Currency>("NZD"),
     [payer, setPayer] = useState("all"),
     [view, setView] = useState<"records" | "members">("records");
+  const [rates, setRates] = useState<CnyRates>({ ...defaultCnyRates });
   const [editor, setEditor] = useState<Expense | null | undefined>(undefined),
+    [draft, setDraft] = useState<ExpenseDraft | undefined>(),
     [detail, setDetail] = useState<Expense | null>(null);
-  const totals = useMemo(
-    () => summarize(data.expenses, data.members, currency),
-    [data, currency],
+  useEffect(() => {
+    setRates(loadCnyRates(data.trip.id));
+  }, [data.trip.id]);
+  const settlement = useMemo(
+    () => summarizeInCny(data.expenses, data.members, rates),
+    [data, rates],
   );
   const records = data.expenses.filter(
     (e) => e.currency === currency && (payer === "all" || e.payer_id === payer),
   );
-  const mine = totals.rows.find((m) => m.id === data.me.id)!;
+  const mine = settlement.rows.find((m) => m.id === data.me.id)!;
+  const payments = useMemo(
+    () => suggestSettlements(settlement.rows),
+    [settlement],
+  );
+  const spendCount = data.expenses.filter((e) => !isTransfer(e)).length;
+  const transferCount = data.expenses.length - spendCount;
+  function memberName(id: string) {
+    return data.members.find((member) => member.id === id)?.name ?? "成员";
+  }
+  function openCreate(next?: ExpenseDraft) {
+    setDraft(next);
+    setEditor(null);
+  }
+  function changeRate(key: keyof CnyRates, value: string) {
+    const next = { ...rates, [key]: Number(value) };
+    if (!(next[key] > 0)) return;
+    setRates(next);
+    saveCnyRates(data.trip.id, next);
+  }
   function exportCsv() {
     const cell = (value: unknown) =>
       `"${String(value)
@@ -84,55 +121,75 @@ export function Ledger({
       </div>
       <div className="ledger-summary">
         <div className="summary-top">
-          <span>已记录支出</span>
-          <div className="currency-toggle">
-            {[
-              ...new Set([
-                data.trip.home_currency,
-                data.trip.currency,
-                ...data.expenses.map((e) => e.currency),
-              ]),
-            ].map((c) => (
-              <button
-                key={currencyLabel(c)}
-                aria-pressed={currency === c}
-                className={c === currency ? "active" : ""}
-                onClick={() => setCurrency(c)}
-              >
-                {currencyLabel(c)}
-              </button>
-            ))}
-          </div>
+          <span>人民币结算</span>
         </div>
-        <div className="total-amount">{money(totals.total, currency)}</div>
-        <p>
-          {data.expenses.filter((e) => e.currency === currency).length} 笔记录 ·{" "}
-          {currencyLabel(currency)}
-        </p>
+        <div className="total-amount">{money(settlement.total, "CNY")}</div>
+          <p>
+            {spendCount} 笔支出
+            {transferCount ? ` · ${transferCount} 笔转账` : ""} · 已按汇率折成人民币
+            {settlement.skipped ? ` · ${settlement.skipped} 笔未计入` : ""}
+          </p>
+        <div className="ledger-fx" aria-label="结算汇率">
+          <label>
+            1 新西兰元
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0.01"
+              step="0.1"
+              className="ledger-fx-rate"
+              aria-label="新西兰元兑人民币"
+              value={rates.NZD}
+              onChange={(e) => changeRate("NZD", e.target.value)}
+            />
+            人民币
+          </label>
+          <label>
+            1 美元
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0.01"
+              step="0.1"
+              className="ledger-fx-rate"
+              aria-label="美元兑人民币"
+              value={rates.USD}
+              onChange={(e) => changeRate("USD", e.target.value)}
+            />
+            人民币
+          </label>
+        </div>
         <div className="my-summary">
           <div>
             <span>我已支付</span>
-            <strong>{money(mine.paid, currency)}</strong>
+            <strong>{money(mine.paid, "CNY")}</strong>
           </div>
           <div>
             <span>我应分摊</span>
-            <strong>{money(mine.share, currency)}</strong>
+            <strong>{money(mine.share, "CNY")}</strong>
           </div>
           <div>
             <span>{mine.balance >= 0 ? "待收回" : "待承担"}</span>
-            <strong>{money(Math.abs(mine.balance), currency)}</strong>
+            <strong>{money(Math.abs(mine.balance), "CNY")}</strong>
           </div>
         </div>
       </div>
-      <button
-        className="primary-button w-full add-expense"
-        onClick={() => {
-          setEditor(null);
-        }}
-      >
-        <Plus size={20} />
-        新增支出
-      </button>
+      <div className="ledger-add">
+        <button
+          className="primary-button w-full add-expense"
+          onClick={() => openCreate()}
+        >
+          <Plus size={20} />
+          新增支出
+        </button>
+        <button
+          type="button"
+          className="text-action"
+          onClick={() => openCreate({ kind: "transfer" })}
+        >
+          记录转账
+        </button>
+      </div>
       <div className="segment-control">
         {(
           [
@@ -151,6 +208,22 @@ export function Ledger({
       </div>
       {view === "records" ? (
         <>
+          <div className="filter-row">
+            <span>币种</span>
+            <div className="currency-toggle">
+              {ledgerCurrencies.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-pressed={currency === c}
+                  className={c === currency ? "active" : ""}
+                  onClick={() => setCurrency(c)}
+                >
+                  {currencyLabel(c)}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="filter-row">
             <span>付款人</span>
             <MemberSelect
@@ -174,10 +247,16 @@ export function Ledger({
                     className="expense-avatar"
                   />
                   <div>
-                    <strong>{e.title}</strong>
+                    <strong>
+                      {isTransfer(e) ? (
+                        <span className="transfer-tag">转账</span>
+                      ) : null}
+                      {e.title}
+                    </strong>
                     <small>
-                      {data.members.find((m) => m.id === e.payer_id)?.name} ·{" "}
-                      {e.date.slice(5).replace("-", ".")}
+                      {isTransfer(e)
+                        ? `${memberName(e.payer_id)} → ${memberName(transferPayeeId(e))} · ${e.date.slice(5).replace("-", ".")}`
+                        : `${memberName(e.payer_id)} · ${e.date.slice(5).replace("-", ".")}`}
                     </small>
                   </div>
                   <span className="expense-amount">
@@ -192,26 +271,69 @@ export function Ledger({
             <div className="surface empty-state">
               <ReceiptText size={30} />
               <h3>
-                {data.expenses.length ? "当前筛选下没有支出" : "还没有支出记录"}
+                {data.expenses.length ? "当前筛选下没有记录" : "还没有账本记录"}
               </h3>
               <p>
                 {data.expenses.length
                   ? "试试其他币种或付款人。"
-                  : "记录第一笔支出，自动计算同行成员的分摊。"}
+                  : "记录第一笔支出或转账，自动计算同行成员的分摊。"}
               </p>
             </div>
           )}
           <p className="list-caption">
             当前筛选合计{" "}
             {money(
-              records.reduce((s, e) => s + e.amount, 0),
+              records
+                .filter((e) => !isTransfer(e))
+                .reduce((s, e) => s + e.amount, 0),
               currency,
             )}
           </p>
         </>
       ) : (
-        <div className="surface divided member-statistics">
-          {totals.rows.map((m) => (
+        <>
+          <div className="surface settlement-plan">
+            <h3>结算建议</h3>
+            {payments.length ? (
+              payments.map((payment) => {
+                const from = data.members.find((m) => m.id === payment.from);
+                const to = data.members.find((m) => m.id === payment.to);
+                return (
+                  <div className="settlement-payment" key={`${payment.from}-${payment.to}`}>
+                    <Avatar member={from} className="expense-avatar" />
+                    <div>
+                      <strong>
+                        {memberName(payment.from)}
+                        <ArrowRight size={13} />
+                        {memberName(payment.to)}
+                      </strong>
+                      <small>按此转账后可冲减双方余额</small>
+                    </div>
+                    <span>{money(payment.amount, "CNY")}</span>
+                    <button
+                      type="button"
+                      className="text-action"
+                      aria-label={`把 ${memberName(payment.from)} 转给 ${memberName(payment.to)} ${money(payment.amount, "CNY")} 记入账本`}
+                      onClick={() =>
+                        openCreate({
+                          kind: "transfer",
+                          payerId: payment.from,
+                          payeeId: payment.to,
+                          amountFen: payment.amount,
+                        })
+                      }
+                    >
+                      记入账本
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="muted">目前没有待结算金额。</p>
+            )}
+          </div>
+          <div className="surface divided member-statistics">
+          {settlement.rows.map((m) => (
             <div className="member-balance" key={m.id}>
               <div className="balance-name">
                 <Avatar member={m} className="expense-avatar" />
@@ -221,34 +343,39 @@ export function Ledger({
                 </strong>
                 <span className={m.balance >= 0 ? "positive" : "muted"}>
                   {m.balance >= 0 ? "待收回" : "待承担"}{" "}
-                  {money(Math.abs(m.balance), currency)}
+                  {money(Math.abs(m.balance), "CNY")}
                 </span>
               </div>
               <div className="balance-values">
-                <span>支付 {money(m.paid, currency)}</span>
-                <span>分摊 {money(m.share, currency)}</span>
+                <span>支付 {money(m.paid, "CNY")}</span>
+                <span>分摊 {money(m.share, "CNY")}</span>
               </div>
               <div className="balance-track">
                 <span
                   style={{
-                    width: `${totals.total ? (m.paid / totals.total) * 100 : 0}%`,
+                    width: `${settlement.total ? (m.paid / settlement.total) * 100 : 0}%`,
                   }}
                 />
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        </>
       )}
       <p className="ledger-hint">
         <Info size={15} />
-        不同币种分别计算；分摊按整数分分配，余额未扣除线下转账。
+        逐笔按原币种记录；结算按 1 新西兰元 = {rates.NZD || defaultCnyRates.NZD}{" "}
+        人民币、1 美元 = {rates.USD || defaultCnyRates.USD}{" "}
+        人民币折算。途中转账不计入支出合计，会冲减待结算金额。分摊按整数分分配。
       </p>
       {editor !== undefined && (
         <ExpenseEditor
           expense={editor}
+          draft={draft}
           data={data}
           onClose={() => {
             setEditor(undefined);
+            setDraft(undefined);
           }}
           onSaved={onRefresh}
         />
@@ -260,6 +387,7 @@ export function Ledger({
           onClose={() => setDetail(null)}
           onRefresh={onRefresh}
           onEdit={(expense) => {
+            setDraft(undefined);
             setEditor(expense);
             setDetail(null);
           }}

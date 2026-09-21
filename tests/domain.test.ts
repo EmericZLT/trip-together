@@ -27,6 +27,135 @@ test("分摊整数分守恒，支持超过六人", () => {
     assert.ok(Math.max(...values) - Math.min(...values) <= 1);
   }
 });
+test("结算按默认汇率折成人民币，分摊在人民币上守恒", async () => {
+  const { toCnyFen, summarizeInCny, defaultCnyRates } = await import(
+    "../web/src/lib/money"
+  );
+  assert.equal(toCnyFen(100, "NZD"), 400);
+  assert.equal(toCnyFen(100, "USD"), 680);
+  assert.equal(toCnyFen(250, "CNY"), 250);
+  const members = [
+    { id: "a", name: "甲", english_name: "A" },
+    { id: "b", name: "乙", english_name: "B" },
+  ];
+  const result = summarizeInCny(
+    [
+      {
+        id: "nzd",
+        payer_id: "a",
+        title: "午餐",
+        amount: 10000,
+        currency: "NZD",
+        category: "餐饮",
+        date: "2026-09-25",
+        participants: ["a", "b"],
+        note: "",
+        source: "手动",
+        version: 1,
+      },
+      {
+        id: "usd",
+        payer_id: "b",
+        title: "门票",
+        amount: 1000,
+        currency: "USD",
+        category: "活动",
+        date: "2026-09-25",
+        participants: ["a", "b"],
+        note: "",
+        source: "手动",
+        version: 1,
+      },
+    ],
+    members,
+    defaultCnyRates,
+  );
+  assert.equal(result.total, 46800);
+  assert.equal(
+    result.rows.reduce((sum, row) => sum + row.share, 0),
+    result.total,
+  );
+  assert.equal(
+    result.rows.reduce((sum, row) => sum + row.balance, 0),
+    0,
+  );
+});
+test("转账不计入支出合计，只冲减待结算；按余额贪心配对给出转账建议", async () => {
+  const { summarizeInCny, suggestSettlements, TRANSFER_CATEGORY } = await import(
+    "../web/src/lib/money"
+  );
+  const members = [
+    { id: "a", name: "甲", english_name: "A" },
+    { id: "b", name: "乙", english_name: "B" },
+    { id: "c", name: "丙", english_name: "C" },
+    { id: "d", name: "丁", english_name: "D" },
+  ];
+  const expense = (
+    id: string,
+    payer: string,
+    amount: number,
+    participants: string[],
+    category = "其他",
+  ) => ({
+    id,
+    payer_id: payer,
+    title: id,
+    amount,
+    currency: "CNY" as const,
+    category,
+    date: "2026-09-25",
+    participants,
+    note: "",
+    source: "手动",
+    version: 1,
+  });
+  const dinner = summarizeInCny(
+    [expense("dinner", "a", 20000, ["a", "b"])],
+    members.slice(0, 2),
+  );
+  assert.equal(dinner.total, 20000);
+  assert.equal(dinner.rows.find((row) => row.id === "a")?.balance, 10000);
+  assert.equal(dinner.rows.find((row) => row.id === "b")?.balance, -10000);
+  const afterPay = summarizeInCny(
+    [
+      expense("dinner", "a", 20000, ["a", "b"]),
+      expense("pay", "b", 4000, ["a"], TRANSFER_CATEGORY),
+    ],
+    members.slice(0, 2),
+  );
+  assert.equal(afterPay.total, 20000);
+  assert.equal(afterPay.rows.find((row) => row.id === "a")?.paid, 20000);
+  assert.equal(afterPay.rows.find((row) => row.id === "a")?.share, 10000);
+  assert.equal(afterPay.rows.find((row) => row.id === "a")?.balance, 6000);
+  assert.equal(afterPay.rows.find((row) => row.id === "b")?.balance, -6000);
+  assert.deepEqual(suggestSettlements(afterPay.rows), [
+    { from: "b", to: "a", amount: 6000 },
+  ]);
+  const four = summarizeInCny(
+    [
+      expense("one", "a", 10000, ["a"]),
+      expense("two", "b", 5000, ["b"]),
+      expense("three", "c", 8000, ["a"]),
+      expense("four", "d", 7000, ["a"]),
+    ],
+    members,
+  );
+  assert.equal(four.total, 30000);
+  const payments = suggestSettlements(four.rows);
+  const remain = Object.fromEntries(four.rows.map((row) => [row.id, row.balance]));
+  for (const payment of payments) {
+    remain[payment.from] += payment.amount;
+    remain[payment.to] -= payment.amount;
+  }
+  assert.equal(
+    Object.values(remain).every((value) => value === 0),
+    true,
+  );
+  assert.deepEqual(payments, [
+    { from: "a", to: "c", amount: 8000 },
+    { from: "a", to: "d", amount: 7000 },
+  ]);
+});
 test("跨时区输入和夏令时缺失、重复时刻", () => {
   assert.equal(
     zonedInstant("2030-06-01T09:00", "Asia/Shanghai"),

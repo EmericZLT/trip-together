@@ -15,7 +15,7 @@ export class SqliteD1 {
 
   async batch(statements: SqliteStatement[]) {
     const run = this.db.transaction(() =>
-      statements.map((statement) => statement.execute()),
+      statements.map((statement) => statement.runResult()),
     );
     return run();
   }
@@ -36,6 +36,14 @@ export class SqliteStatement {
     return this.db.prepare(this.sql).run(...this.params);
   }
 
+  runResult(): RunResult {
+    const info = this.execute();
+    return {
+      success: true,
+      meta: { changes: info.changes, last_row_id: Number(info.lastInsertRowid) },
+    };
+  }
+
   async first<T>(column?: string): Promise<T | null> {
     const row = this.db.prepare(this.sql).get(...this.params) as
       | Record<string, unknown>
@@ -51,10 +59,6 @@ export class SqliteStatement {
   }
 
   async run(): Promise<RunResult> {
-    const info = this.execute();
-    return {
-      success: true,
-      meta: { changes: info.changes, last_row_id: Number(info.lastInsertRowid) },
-    };
+    return this.runResult();
   }
 }

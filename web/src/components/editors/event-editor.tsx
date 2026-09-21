@@ -36,7 +36,7 @@ export function EventEditor({
   onClose: () => void;
   onSaved: (date?: string) => Promise<void>;
 }) {
-  const [step, setStep] = useState<number>(initialStep);
+  const [step, setStep] = useState<number>(initialStep === 4 ? 2 : 1);
   useEffect(() => {
     track("event_form_opened", "itinerary");
   }, []);
@@ -115,11 +115,11 @@ export function EventEditor({
   const suggested = transport && v.from && v.to ? `${v.from} → ${v.to}` : "";
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (step < 4) {
+    if (step < 2) {
       try {
-        if (step === 2) resolveTiming(timing, v.kind);
+        resolveTiming(timing, v.kind);
         setError("");
-        setStep(step + 1);
+        setStep(2);
       } catch (e) {
         setError((e as Error).message);
       }
@@ -138,7 +138,7 @@ export function EventEditor({
           code: transport || stay ? v.code : "",
           phone: stay ? v.phone : "",
           title: v.title.trim() || suggested,
-          place: location?.name || v.place,
+          place: (transport ? v.to : v.place) || location?.name || "",
           ...resolved,
           location,
           departureLocation: transport ? departure : null,
@@ -180,7 +180,11 @@ export function EventEditor({
                   key={kind}
                   type="button"
                   aria-pressed={v.kind === kind}
-                  onClick={() => change("kind", kind)}
+                  onClick={() => {
+                    change("kind", kind);
+                    if (kind === "stay")
+                      setTiming((current) => ({ ...current, range: true }));
+                  }}
                 >
                   <EventIcon kind={kind as TripEvent["kind"]} size={21} />
                   {name}
@@ -194,6 +198,61 @@ export function EventEditor({
               maxLength={150}
               onChange={(s) => change("title", s)}
             />
+            <EventTimeFields v={timing} kind={v.kind} onChange={setTiming} />
+            <div className="event-place-step">
+              {transport && (
+                <Field
+                  label="出发地"
+                  value={v.from}
+                  placeholder="城市、机场或地点名称"
+                  onChange={(s) => change("from", s)}
+                />
+              )}
+              <Field
+                label={transport ? "目的地" : "地点名称"}
+                value={transport ? v.to : v.place}
+                placeholder="可直接填写"
+                onChange={(s) =>
+                  setV((prev) =>
+                    transport ? { ...prev, to: s } : { ...prev, place: s },
+                  )
+                }
+              />
+              <Field
+                label="地址"
+                value={v.address}
+                placeholder="例如 90A Edgewater Drive, Auckland"
+                onChange={(s) => change("address", s)}
+              />
+              <p className="muted">
+                地址可以直接改。下面的搜索可选，用来自动填入名称和地址；搜不到时手填即可。
+              </p>
+              {transport && (
+                <PlacePicker
+                  label="出发地"
+                  value={departure}
+                  onChange={(place) => {
+                    setDeparture(place);
+                    if (place)
+                      setV((prev) => ({ ...prev, from: place.name }));
+                  }}
+                />
+              )}
+              <PlacePicker
+                label={transport ? "目的地" : "地点"}
+                value={location}
+                onChange={(place) => {
+                  setLocation(place);
+                  if (place)
+                    setV((prev) => ({
+                      ...prev,
+                      place: place.name,
+                      address: place.address,
+                      ...(transport ? { to: place.name } : {}),
+                    }));
+                }}
+              />
+            </div>
             <details className="optional-details">
               <summary>补充说明（选填）</summary>
               <div className="optional-fields">
@@ -226,41 +285,6 @@ export function EventEditor({
           </>
         )}
         {step === 2 && (
-          <EventTimeFields v={timing} kind={v.kind} onChange={setTiming} />
-        )}
-        <div hidden={step !== 3} className="event-place-step">
-          <p className="muted">
-            搜索并选择地点后，自动保存地址。请核对城市与名称；尚未确定可以直接下一步。
-          </p>
-          {transport && (
-            <PlacePicker
-              label="出发地"
-              value={departure}
-              legacy={v.from}
-              onChange={(place) => {
-                setDeparture(place);
-                setV((prev) => ({ ...prev, from: place?.name ?? "" }));
-              }}
-            />
-          )}
-          <PlacePicker
-            label={transport ? "目的地" : "地点"}
-            value={location}
-            legacy={[v.place || (transport ? v.to : ""), v.address]
-              .filter(Boolean)
-              .join(" · ")}
-            onChange={(place) => {
-              setLocation(place);
-              setV((prev) => ({
-                ...prev,
-                place: place?.name ?? "",
-                address: place?.address ?? "",
-                ...(transport ? { to: place?.name ?? "" } : {}),
-              }));
-            }}
-          />
-        </div>
-        {step === 4 && (
           <section className="event-document-section" aria-label="关联资料选择">
             <h3>
               关联资料
@@ -303,7 +327,7 @@ export function EventEditor({
           <button className="primary-button" disabled={busy}>
             {busy
               ? "正在保存…"
-              : step < 4
+              : step < 2
                 ? "下一步"
                 : event
                   ? "保存修改"

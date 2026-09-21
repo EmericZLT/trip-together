@@ -11,7 +11,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import type { Expense, TripData } from "@/lib/models";
-import { currencyLabel, money, splitAmount } from "@/lib/money";
+import { currencyLabel, money, splitAmount, isTransfer, transferPayeeId } from "@/lib/money";
 import { api, fileUrl } from "@/lib/api";
 import { Avatar } from "../avatar";
 import { SheetFooter, Sheet } from "../ui";
@@ -36,6 +36,10 @@ export function ExpenseDetail({
   const payer = data.members.find((member) => member.id === expense.payer_id);
   const recorder = data.members.find(
     (member) => member.id === expense.created_by,
+  );
+  const transfer = isTransfer(expense);
+  const payee = data.members.find(
+    (member) => member.id === transferPayeeId(expense),
   );
   const shares = splitAmount(expense.amount, expense.participants);
   const participants = data.members.filter((member) =>
@@ -67,7 +71,7 @@ export function ExpenseDetail({
   return (
     <Sheet
       open
-      title="支出详情"
+      title={transfer ? "转账详情" : "支出详情"}
       onClose={() => !busy && onClose()}
       className="expense-detail-sheet"
     >
@@ -95,30 +99,56 @@ export function ExpenseDetail({
           <div className="paid-by">
             <Avatar member={payer} />
             <div>
-              <small>付款人</small>
+              <small>{transfer ? "转出人" : "付款人"}</small>
               <strong>{payer?.name}</strong>
             </div>
             {recorder && <span>{recorder.name}记录</span>}
           </div>
         </article>
-        <section className="expense-share-section">
-          <div className="expense-detail-heading">
-            <h3>
-              <Users size={17} />
-              费用分摊
-            </h3>
-            <span>{participants.length} 人均分</span>
-          </div>
-          <div className="expense-share-grid">
-            {participants.map((member) => (
-              <div className="expense-share-member" key={member.id}>
-                <Avatar member={member} />
-                <span>{member.name}</span>
-                <strong>{money(shares[member.id], expense.currency)}</strong>
+        {transfer ? (
+          <section className="expense-share-section">
+            <div className="expense-detail-heading">
+              <h3>
+                <Users size={17} />
+                途中转账
+              </h3>
+            </div>
+            <div className="expense-share-grid">
+              <div className="expense-share-member">
+                <Avatar member={payer} />
+                <span>{payer?.name}</span>
+                <strong>转出</strong>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="expense-share-member">
+                <Avatar member={payee} />
+                <span>{payee?.name}</span>
+                <strong>收款</strong>
+              </div>
+            </div>
+            <p className="muted">
+              这笔转账不计入支出合计，已按汇率冲减待结算金额。
+            </p>
+          </section>
+        ) : (
+          <section className="expense-share-section">
+            <div className="expense-detail-heading">
+              <h3>
+                <Users size={17} />
+                费用分摊
+              </h3>
+              <span>{participants.length} 人均分</span>
+            </div>
+            <div className="expense-share-grid">
+              {participants.map((member) => (
+                <div className="expense-share-member" key={member.id}>
+                  <Avatar member={member} />
+                  <span>{member.name}</span>
+                  <strong>{money(shares[member.id], expense.currency)}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
         <section className="expense-files-section">
           <div className="expense-detail-heading">
             <h3>
@@ -172,8 +202,14 @@ export function ExpenseDetail({
             <p>
               {deleted
                 ? "记录已删除，点击重试刷新账本。"
-                : "确定删除这笔支出吗？"}
-              <small>删除后会从账本和分摊统计中移除。</small>
+                : transfer
+                  ? "确定删除这笔转账吗？"
+                  : "确定删除这笔支出吗？"}
+              <small>
+                {transfer
+                  ? "删除后会恢复相应的待结算金额。"
+                  : "删除后会从账本和分摊统计中移除。"}
+              </small>
             </p>
             <div>
               <button
@@ -214,11 +250,11 @@ export function ExpenseDetail({
             </button>
             <button
               className="primary-button"
-              aria-label="编辑这笔支出"
+              aria-label={transfer ? "编辑这笔转账" : "编辑这笔支出"}
               onClick={() => onEdit(expense)}
             >
               <Pencil size={17} />
-              修改支出
+              修改{transfer ? "转账" : "支出"}
             </button>
           </div>
         )}

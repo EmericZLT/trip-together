@@ -17,6 +17,7 @@ const schema = z.object({
     ),
   participants: z.array(z.string()).min(1, "至少选择一位分摊成员").max(100),
   note: z.string().trim().max(1000).default(""),
+  category: z.string().trim().min(1).max(20).default("其他"),
   version: z.number().int().positive().optional(),
   receiptIds: z.array(z.string().uuid()).max(5).optional(),
 });
@@ -53,6 +54,12 @@ export async function saveExpense(
     .first<Existing>();
   const payer = input.payerId ?? existing?.payer_id ?? memberId;
   if (!members.includes(payer)) throw new HttpError(400, "请选择有效付款人");
+  if (input.category === "转账") {
+    if (input.participants.length !== 1)
+      throw new HttpError(400, "转账请选择一位收款人");
+    if (input.participants[0] === payer)
+      throw new HttpError(400, "不能转账给自己");
+  }
   if (expenseId) {
     if (!existing) throw new HttpError(404, "这笔支出不存在");
     if (existing.version !== input.version)
@@ -87,7 +94,7 @@ export async function saveExpense(
   if (expenseId)
     statements.push(
       env.DB.prepare(
-        "UPDATE expenses SET title=?,amount=?,currency=?,payer_id=?,date=?,participants=?,note=?,version=version+1,write_token=? WHERE id=? AND trip_id=? AND version=?",
+        "UPDATE expenses SET title=?,amount=?,currency=?,payer_id=?,date=?,participants=?,note=?,category=?,version=version+1,write_token=? WHERE id=? AND trip_id=? AND version=?",
       ).bind(
         input.title,
         input.amount,
@@ -96,6 +103,7 @@ export async function saveExpense(
         input.date,
         JSON.stringify(input.participants),
         input.note,
+        input.category,
         token,
         id,
         tripId,
@@ -105,7 +113,7 @@ export async function saveExpense(
   else
     statements.push(
       env.DB.prepare(
-        "INSERT INTO expenses (id,trip_id,payer_id,created_by,title,amount,currency,category,date,participants,note,write_token) VALUES (?,?,?,?,?,?,?,'其他',?,?,?,?)",
+        "INSERT INTO expenses (id,trip_id,payer_id,created_by,title,amount,currency,category,date,participants,note,write_token) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
       ).bind(
         id,
         tripId,
@@ -114,6 +122,7 @@ export async function saveExpense(
         input.title,
         input.amount,
         input.currency,
+        input.category,
         input.date,
         JSON.stringify(input.participants),
         input.note,

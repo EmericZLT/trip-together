@@ -63,6 +63,7 @@ export async function body<T>(
       end: "结束时间",
       currency: "币种",
       home_currency: "常用币种",
+      category: "分类",
       timezone: "当地时间",
       home_timezone: "常住地时间",
       endTimezone: "到达地时间",

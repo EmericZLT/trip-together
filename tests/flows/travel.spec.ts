@@ -38,8 +38,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   await page.getByLabel("事项名称", { exact: true }).fill("城市间航班");
   await page.getByText("补充说明（选填）", { exact: true }).click();
   await page.getByLabel("说明", { exact: true }).fill("提前到达机场办理登机");
-  for (let i = 0; i < 3; i++)
-    await page.getByRole("button", { name: "下一步", exact: true }).click();
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await page.getByRole("button", { name: "添加航班", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "现在", exact: true }).click();

@@ -10,7 +10,7 @@ const paris = {
   countryCode: "fr",
   provider: "geoapify",
 };
-test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和资料上传", async ({
+test("录入时保留草稿、分钟时间与浮层选择、地点搜索和资料上传", async ({
   page,
   browserName,
 }) => {
@@ -39,9 +39,6 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   await expect(page.locator(".entry-step")).toHaveCount(0);
   await expect(page.getByText("安排已确认", { exact: true })).toHaveCount(0);
   await page.getByLabel("活动名称").fill("午后参观");
-  const next = () =>
-    page.getByRole("button", { name: "下一步", exact: true }).click();
-  await next();
   await chooseTime(page, "开始时间", "09", "17");
   await page.getByRole("switch", { name: "时间段", exact: true }).click();
   await chooseTime(page, "结束时间", "10", "42");
@@ -56,7 +53,6 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   await expect(page.getByLabel("结束时间", { exact: true })).toHaveValue(
     "10:42",
   );
-  await next();
   await page.getByLabel("搜索地点", { exact: true }).fill("巴黎 铁塔");
   await page.getByRole("button", { name: "搜索地点结果" }).click();
   const searchButton = page.getByRole("button", { name: "搜索地点结果" });
@@ -78,7 +74,7 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   );
   await page.getByRole("button", { name: "搜索地点结果" }).click();
   await page.getByRole("button", { name: /埃菲尔铁塔.*Paris/ }).click();
-  await next();
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await page.getByRole("button", { name: "上传并关联资料" }).click();
   await page.getByRole("combobox", { name: "资料分类" }).fill("景点门票");
   await page.getByText("新建分类「景点门票」", { exact: true }).click();
@@ -106,16 +102,13 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
   await page.keyboard.press("Escape");
   await uploadDialog.getByRole("button", { name: "关闭", exact: true }).click();
   await page.screenshot({ path: `.local/wizard-documents-${browserName}.png` });
-  for (let i = 0; i < 3; i++)
-    await page.getByRole("button", { name: "上一步", exact: true }).click();
+  await page.getByRole("button", { name: "上一步", exact: true }).click();
   await expect(page.getByLabel("活动名称")).toHaveValue("午后参观");
-  await next();
   await expect(page.getByLabel("开始时间", { exact: true })).toHaveValue(
     "09:17",
   );
-  await next();
   await expect(page.getByText("埃菲尔铁塔", { exact: true })).toBeVisible();
-  await next();
+  await page.getByRole("button", { name: "下一步", exact: true }).click();
   await expect(
     page.getByRole("checkbox", { name: "参观凭证.png" }),
   ).toBeChecked();

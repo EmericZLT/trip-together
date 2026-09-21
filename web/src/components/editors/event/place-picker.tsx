@@ -120,7 +120,7 @@ export function PlacePicker({
       )}
       {searched && !results.length && (
         <p className="muted">
-          没有找到匹配地点，试试加上城市名或使用当地名称，也可以稍后再选。
+          没有找到匹配地点，试试加上城市名，或直接在上方填写地址。
         </p>
       )}
       {results.length > 0 && (
