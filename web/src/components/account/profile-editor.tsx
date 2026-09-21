@@ -65,7 +65,9 @@ export function ProfileEditor({
   return (
     <Sheet open title="编辑个人资料" onClose={() => !busy && onClose()}>
       <SheetForm className="editor-form" onSubmit={save}>
-        <p className="muted">昵称和头像供同行成员查看，证件信息仅本人可见。</p>
+        <p className="muted">
+          昵称和头像供同行成员查看。证件号码会写入服务器，可以不填；请勿上传护照扫描件。
+        </p>
         <Field
           label="昵称"
           value={v.name}
@@ -196,7 +198,7 @@ export function PasswordEditor({
             required
             onChange={setPassword}
           />
-          <small>至少 10 个字符，区分大小写。</small>
+          <small>至少 5 个字符，区分大小写。</small>
           {error && <p role="alert">{error}</p>}
           <SheetFooter>
             <button className="primary-button" disabled={busy}>

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { body, HttpError, json } from "../http";
-import { passwordHash, randomToken, equal } from "./password";
+import { passwordHash, randomToken, equal, MIN_PASSWORD_LENGTH } from "./password";
 import { rateLimit } from "../auth";
 export const profileColumns =
   "id,email,name,english_name,passport,identity_number,expiry,version,(avatar_key IS NOT NULL) AS has_avatar";
@@ -44,7 +44,7 @@ export async function changePassword(request: Request, env: Env, id: string) {
     request,
     z.object({
       currentPassword: z.string().max(128),
-      password: z.string().min(10).max(128),
+      password: z.string().min(MIN_PASSWORD_LENGTH).max(128),
     }),
   );
   const m = await env.DB.prepare(

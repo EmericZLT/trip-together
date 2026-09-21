@@ -11,7 +11,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await page.getByRole("button", { name: "注册新账号" }).click();
-  await page.getByLabel("邮箱", { exact: true }).fill(email);
+  await page.getByLabel("用户名", { exact: true }).fill(email);
   await expect(page.getByLabel("昵称", { exact: true })).toHaveCount(0);
   await page.getByLabel("密码", { exact: true }).fill(password);
   await page.getByRole("button", { name: "注册", exact: true }).click();
@@ -162,7 +162,7 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   });
   await page.getByRole("button", { name: "我的", exact: true }).click();
   await page.getByRole("button", { name: "退出当前身份" }).click();
-  await page.getByLabel("邮箱", { exact: true }).fill(email);
+  await page.getByLabel("用户名", { exact: true }).fill(email);
   await page.getByLabel("密码", { exact: true }).fill(password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await expect(page.getByRole("heading", { name: "城市间航班" })).toBeVisible();
@@ -177,7 +177,7 @@ test("资料预览改名失败保留输入，保存后按新名称搜索并持�
     id = crypto.randomUUID();
   await account.upload(`/trips/${trip}/documents/${id}`);
   await page.goto("/");
-  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("用户名", { exact: true }).fill(account.email);
   await page.getByLabel("密码", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await page.getByRole("button", { name: "资料", exact: true }).click();

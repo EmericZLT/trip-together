@@ -116,12 +116,14 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
             </label>
           )}
           <label>
-            邮箱
+            {mode === "migrate" ? "邮箱" : "用户名"}
             <input
               required
-              type="email"
-              aria-label="邮箱"
+              type="text"
+              aria-label={mode === "migrate" ? "邮箱" : "用户名"}
               autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               autoComplete="username"
               maxLength={254}
               value={email}
@@ -140,7 +142,7 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
               <LockKeyhole size={18} />
               <input
                 required
-                minLength={mode === "login" ? 1 : 10}
+                minLength={mode === "login" ? 1 : 5}
                 maxLength={128}
                 type={visible ? "text" : "password"}
                 aria-label={mode === "recover" ? "新密码" : "密码"}
@@ -162,7 +164,7 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
               </button>
             </div>
             {(mode === "register" || mode === "recover") && (
-              <small>至少 10 个字符，区分大小写</small>
+              <small>至少 5 个字符，区分大小写</small>
             )}
           </label>
           {required && mode !== "login" && (

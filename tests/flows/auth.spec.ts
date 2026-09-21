@@ -10,12 +10,12 @@ test("邮箱登录错误位于按钮上方、本地无需验证码并可重置�
     "secondary-button",
   );
   await expect(page.getByLabel("邮箱验证码")).toHaveCount(0);
-  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("用户名", { exact: true }).fill(account.email);
   await page.getByLabel("密码", { exact: true }).fill("wrong");
   await page.getByRole("button", { name: "登录", exact: true }).click();
   const error = page.locator("form").getByRole("alert"),
     submit = page.getByRole("button", { name: "登录", exact: true });
-  await expect(error).toHaveText("邮箱或密码不正确");
+  await expect(error).toHaveText("用户名或密码不正确");
   const a = await error.boundingBox(),
     b = await submit.boundingBox();
   expect(a!.y + a!.height).toBeLessThan(b!.y);
@@ -46,7 +46,7 @@ test("线上认证页面展示邮箱验证码和发送倒计时", async ({
   await page.goto("/");
   await expect(page.getByLabel("邮箱验证码")).toHaveCount(0);
   await page.getByRole("button", { name: "注册新账号" }).click();
-  await page.getByLabel("邮箱", { exact: true }).fill("preview@example.test");
+  await page.getByLabel("用户名", { exact: true }).fill("preview@example.test");
   await page.getByRole("button", { name: "发送验证码", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText(
     "验证码已经发送，请查看邮箱。",

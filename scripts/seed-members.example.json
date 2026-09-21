@@ -1,24 +1,31 @@
 [
   {
-    "email": "owner@example.com",
-    "password": "change-me-now",
+    "username": "zhangleiting",
+    "password": "zhangleiting",
+    "previous": "owner@example.com",
     "name": "张雷霆",
     "english_name": "Zhang Leiting",
     "owner": true
   },
   {
-    "email": "member-b@example.com",
-    "password": "change-me-now",
-    "name": "成员B"
+    "username": "panyufan",
+    "password": "panyufan",
+    "previous": "member-b@example.com",
+    "name": "潘宇凡",
+    "english_name": "Pan Yufan"
   },
   {
-    "email": "member-c@example.com",
-    "password": "change-me-now",
-    "name": "成员C"
+    "username": "liangjiaxin",
+    "password": "liangjiaxin",
+    "previous": "member-c@example.com",
+    "name": "梁嘉欣",
+    "english_name": "Liang Jiaxin"
   },
   {
-    "email": "member-d@example.com",
-    "password": "change-me-now",
-    "name": "成员D"
+    "username": "biran",
+    "password": "biran",
+    "previous": "member-d@example.com",
+    "name": "毕然",
+    "english_name": "Bi Ran"
   }
 ]

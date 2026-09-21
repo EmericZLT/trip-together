@@ -8,7 +8,7 @@ async function main() {
   const membersPath = resolve(root, "data/seed-members.json");
   if (!existsSync(membersPath)) {
     console.error(
-      "请复制 scripts/seed-members.example.json 为 data/seed-members.json，填入四人邮箱、初始密码和姓名后再运行 npm run seed。",
+      "请复制 scripts/seed-members.example.json 为 data/seed-members.json，填入四人用户名、初始密码和姓名后再运行 npm run seed。",
     );
     process.exit(1);
   }

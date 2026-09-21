@@ -36,7 +36,7 @@ export function ReceiptPicker({
       />
       <div className="receipt-caption">
         <span>资料</span>
-        <small>图片 / PDF · 单份 ≤10 MB</small>
+        <small>消费凭证 · 请勿上传证件</small>
       </div>
       <FileTiles
         files={receipts.files}

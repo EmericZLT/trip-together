@@ -233,3 +233,14 @@
   width: 100%;
   margin-top: 12px;
 }
+.event-map-actions {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.event-map-actions a,
+.event-map-actions button {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+}

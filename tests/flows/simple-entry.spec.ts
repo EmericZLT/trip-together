@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import { Client, createTrip, png } from "../support/api";
 async function login(page: import("@playwright/test").Page, account: Client) {
   await page.goto("/");
-  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("用户名", { exact: true }).fill(account.email);
   await page.getByLabel("密码", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
 }

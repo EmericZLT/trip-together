@@ -1,4 +1,5 @@
 const encoder = new TextEncoder();
+export const MIN_PASSWORD_LENGTH = 5;
 export const hex = (buffer: ArrayBuffer) =>
   [...new Uint8Array(buffer)]
     .map((b) => b.toString(16).padStart(2, "0"))

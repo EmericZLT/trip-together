@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { body, HttpError, json } from "./http";
 import { signSession, verifiedSession } from "./security/session";
-import { sha, randomToken, passwordHash, equal } from "./accounts/password";
+import { sha, randomToken, passwordHash, equal, MIN_PASSWORD_LENGTH } from "./accounts/password";
 import { rateLimit } from "./security/rate-limit";
 export { rateLimit } from "./security/rate-limit";
-import { emailAddress, consumeCode } from "./security/email";
+import { accountName, consumeCode } from "./security/email";
 export { sha } from "./accounts/password";
 const credentials = z.object({
-  email: emailAddress,
-  password: z.string().min(10).max(128),
+  email: accountName,
+  password: z.string().min(MIN_PASSWORD_LENGTH).max(128),
   code: z.string().max(6).optional(),
 });
 function cookie(request: Request, env: Env, value: string, age: number) {
@@ -70,7 +70,7 @@ export async function register(request: Request, env: Env) {
     )
     .run();
   if (!result.meta.changes)
-    throw new HttpError(409, "邮箱已经注册，请登录或重置密码");
+    throw new HttpError(409, "用户名已经注册，请登录或重置密码");
   return session(request, env, id);
 }
 export async function login(request: Request, env: Env) {
@@ -89,7 +89,7 @@ export async function login(request: Request, env: Env) {
     member?.salt ?? "invalid-account",
   );
   if (!member || !equal(hash, member.password_hash))
-    throw new HttpError(401, "邮箱或密码不正确");
+    throw new HttpError(401, "用户名或密码不正确");
   return session(request, env, member.id);
 }
 export async function recover(request: Request, env: Env) {
@@ -99,7 +99,7 @@ export async function recover(request: Request, env: Env) {
   const member = await env.DB.prepare("SELECT id FROM members WHERE email=?")
     .bind(input.email)
     .first<{ id: string }>();
-  if (!member) throw new HttpError(400, "无法重置密码，请检查邮箱或先注册");
+  if (!member) throw new HttpError(400, "无法重置密码，请检查用户名或先注册");
   const salt = randomToken();
   await env.DB.batch([
     env.DB.prepare("UPDATE members SET password_hash=?,salt=? WHERE id=?").bind(

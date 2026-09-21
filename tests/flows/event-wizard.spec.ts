@@ -31,7 +31,7 @@ test("四步录入保留草稿、分钟时间与浮层选择、地点搜索和�
     } else await route.fulfill({ json: { places: [paris] } });
   });
   await page.goto("/");
-  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("用户名", { exact: true }).fill(account.email);
   await page.getByLabel("密码", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await page.getByRole("button", { name: "行程", exact: true }).click();

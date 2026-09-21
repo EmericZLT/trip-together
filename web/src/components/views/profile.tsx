@@ -41,7 +41,7 @@ export function Profile({
     <section className="page-content">
       <div className="page-title">
         <h1>我的旅行</h1>
-        <p className="muted">查看个人证件和文件。</p>
+        <p className="muted">文件仅本人可见，请勿上传护照、签证等私人原件。</p>
       </div>
       <div className="profile-card">
         <Avatar member={data.me} className="profile-avatar" />

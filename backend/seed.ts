@@ -3,11 +3,13 @@ import { passwordHash, randomToken } from "../worker/accounts/password.ts";
 import { itineraryEvents, packingList, tripMeta } from "./nz-itinerary.ts";
 
 export type SeedMember = {
-  email: string;
+  email?: string;
+  username?: string;
   password: string;
   name: string;
   english_name?: string;
   owner?: boolean;
+  previous?: string;
 };
 
 export type SeedExpense = {
@@ -19,17 +21,28 @@ export type SeedExpense = {
   note?: string;
 };
 
-function emailOf(value: string) {
-  return value.trim().toLowerCase();
+function accountOf(input: SeedMember) {
+  return (input.username ?? input.email ?? "").trim().toLowerCase();
 }
 
 async function upsertMember(env: Env, input: SeedMember, resetPassword: boolean) {
-  const email = emailOf(input.email);
-  if (!email || !input.name?.trim()) throw new HttpError(400, "成员需要邮箱和姓名");
-  if (input.password.length < 10) throw new HttpError(400, "初始密码至少 10 个字符");
-  const existing = await env.DB.prepare(
-    "SELECT id FROM members WHERE email=?",
-  ).bind(email).first<{ id: string }>();
+  const email = accountOf(input);
+  if (!email || !input.name?.trim()) throw new HttpError(400, "成员需要用户名和姓名");
+  if (input.password.length < 5) throw new HttpError(400, "初始密码至少 5 个字符");
+  let existing = await env.DB.prepare("SELECT id FROM members WHERE email=?")
+    .bind(email)
+    .first<{ id: string }>();
+  const previous = input.previous?.trim().toLowerCase();
+  if (!existing && previous) {
+    existing = await env.DB.prepare("SELECT id FROM members WHERE email=?")
+      .bind(previous)
+      .first<{ id: string }>();
+    if (existing) {
+      await env.DB.prepare("UPDATE members SET email=? WHERE id=?")
+        .bind(email, existing.id)
+        .run();
+    }
+  }
   if (existing) {
     if (resetPassword) {
       const salt = randomToken();
@@ -85,7 +98,7 @@ export async function seedNzTrip(
   for (const member of members) {
     const id = await upsertMember(env, member, reset);
     ids.push({
-      email: emailOf(member.email),
+      email: accountOf(member),
       name: member.name.trim(),
       id,
       owner: Boolean(member.owner),

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { TripEvent } from "@/lib/models";
 import { dateLabel, eventTime } from "@/lib/time";
+import { MapPlaceActions } from "../map-place-actions";
 export function EventExtras({
   event,
   events,
@@ -43,19 +44,24 @@ export function EventExtras({
           </button>
         )}
       </div>
-      {(event.note || event.address) && (
+      {(event.note ||
+        event.address ||
+        event.place ||
+        event.location ||
+        event.to) && (
         <div className="surface event-reminder">
           <h2>
             <Info size={17} />
             本项提醒
           </h2>
           {event.note && <p>{event.note}</p>}
-          {event.address && (
-            <div>
+          {(event.address || event.place) && (
+            <div className="event-reminder-place">
               <MapPin size={15} />
-              <span>{event.address}</span>
+              <span>{event.address || event.place}</span>
             </div>
           )}
+          <MapPlaceActions event={event} />
         </div>
       )}
       {stay && (

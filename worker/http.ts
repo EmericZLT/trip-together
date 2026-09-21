@@ -53,7 +53,7 @@ export async function body<T>(
   if (!result.success) {
     const issue = result.error.issues[0];
     const names: Record<string, string> = {
-      email: "邮箱",
+      email: "用户名",
       password: "密码",
       title: "名称",
       name: "昵称",

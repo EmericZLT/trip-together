@@ -276,7 +276,9 @@ export function EventEditor({
               onChange={setDocuments}
               onUpload={() => setUploading(true)}
             />
-            <p className="muted">上传后自动关联，并保存到旅行资料中。</p>
+            <p className="muted">
+              上传后自动关联到旅行资料。请勿上传护照等私人证件。
+            </p>
           </section>
         )}
         <SheetFooter className="entry-step-actions">

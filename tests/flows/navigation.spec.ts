@@ -6,7 +6,7 @@ test("个人页切换、独立行程管理、非当前行程邀请与原页面�
 }) => {
   const account = await new Client().register();
   await page.goto("/");
-  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("用户名", { exact: true }).fill(account.email);
   await page.getByLabel("密码", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await expect(

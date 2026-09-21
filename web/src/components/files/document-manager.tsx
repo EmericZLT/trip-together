@@ -99,6 +99,9 @@ export function DocumentUpload({
       onClose={() => !busy && onClose()}
     >
       <SheetForm className="editor-form" onSubmit={save}>
+        <p className="muted">
+          请上传机票、酒店、租车等行程资料，不要上传护照、签证或身份证扫描件。
+        </p>
         <CategorySelect
           value={category}
           categories={categories}
@@ -151,8 +154,8 @@ export function DocumentUpload({
           </div>
           <p className="muted">
             {privateFile
-              ? "只有你能查看这些文件。"
-              : "当前行程的同行成员可以查看，请勿上传私人证件。"}
+              ? "只有你能查看。即便如此，也不要上传护照、签证等身份原件。"
+              : "当前行程的同行成员可以查看。请勿上传护照、签证、身份证等私人原件。"}
           </p>
         </details>
         <SheetFooter>

@@ -8,6 +8,18 @@ export const emailAddress = z
   .toLowerCase()
   .email("请输入有效的邮箱地址")
   .max(254);
+const usernamePattern = /^[a-z][a-z0-9._-]{2,39}$/;
+const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const accountName = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(3, "请输入用户名")
+  .max(254)
+  .refine(
+    (value) => usernamePattern.test(value) || looksLikeEmail.test(value),
+    "请输入用户名",
+  );
 const purposes = z.enum(["register", "recover", "migrate"]);
 type Purpose = z.infer<typeof purposes>;
 const labels: Record<Purpose, string> = {

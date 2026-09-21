@@ -86,6 +86,9 @@ export function PersonalDocuments({
           仅本人可见
         </span>
       </div>
+      <p className="muted personal-privacy-hint">
+        适合机票、预订确认等行程文件。请勿上传护照、签证、身份证等私人原件；仅本人可见也不等于只存在你的手机里。
+      </p>
       <div className="surface personal-files-card">
         <input
           hidden
@@ -126,7 +129,7 @@ export function PersonalDocuments({
             </span>
             <span>
               <strong>添加证件或文件</strong>
-              <small>图片 / PDF · 每份 ≤10 MB</small>
+              <small>图片 / PDF · 每份 ≤10 MB · 请勿上传私人证件</small>
             </span>
             <ChevronRight size={17} />
           </button>

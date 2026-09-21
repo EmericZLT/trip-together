@@ -10,8 +10,35 @@ export const placeSchema = z.object({
 });
 export type Place = z.infer<typeof placeSchema>;
 export function mapLink(place: Place) {
-  const url = new URL("https://maps.apple.com/");
-  url.searchParams.set("daddr", `${place.latitude},${place.longitude}`);
-  url.searchParams.set("dirflg", "d");
+  const url = new URL("https://www.google.com/maps/dir/");
+  url.searchParams.set("api", "1");
+  url.searchParams.set(
+    "destination",
+    `${place.latitude},${place.longitude}`,
+  );
+  url.searchParams.set("travelmode", "driving");
   return url.toString();
+}
+export function mapSearchLink(query: string) {
+  const url = new URL("https://www.google.com/maps/search/");
+  url.searchParams.set("api", "1");
+  url.searchParams.set("query", query);
+  return url.toString();
+}
+export function mapCopyText(input: {
+  name?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}) {
+  const lines = [input.name?.trim(), input.address?.trim()].filter(
+    (value): value is string => Boolean(value),
+  );
+  if (
+    Number.isFinite(input.latitude) &&
+    Number.isFinite(input.longitude)
+  ) {
+    lines.push(`${input.latitude}, ${input.longitude}`);
+  }
+  return [...new Set(lines)].join("\n");
 }

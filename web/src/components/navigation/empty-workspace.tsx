@@ -17,7 +17,7 @@ export function EmptyWorkspace({
       : tab === "documents"
         ? {
             title: "还没有行程资料",
-            text: "机票、预订和共享文件会显示在这里。个人证件可以在“我的”中管理。",
+            text: "机票、预订和共享文件会显示在这里。请勿上传护照等私人证件。",
             Icon: FolderOpen,
           }
         : {
@@ -43,7 +43,7 @@ export function EmptyWorkspace({
           <div className="onboarding-note">
             <CalendarDays size={19} />
             <p>
-              添加行程后，这里会显示接下来的安排。你也可以先在“我的”中修改昵称、整理个人证件。
+              添加行程后，这里会显示接下来的安排。你也可以先在“我的”中修改昵称。请勿上传护照等私人证件。
             </p>
           </div>
         </>

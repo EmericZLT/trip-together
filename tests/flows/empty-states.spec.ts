@@ -8,7 +8,7 @@ test("空白行程的账本、资料、准备清单没有空白细条", async ({
   const account = await new Client().register();
   await createTrip(account);
   await page.goto("/");
-  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("用户名", { exact: true }).fill(account.email);
   await page.getByLabel("密码", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
   for (const [tab, heading] of [

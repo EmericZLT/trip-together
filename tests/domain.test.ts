@@ -112,7 +112,9 @@ test("事项时间支持分钟、单点、跨日跨区时间段及待定日期",
   assert.equal(dated.end, "2030-06-01T15:00:00.000Z");
 });
 test("地点坐标验证与导航保持 WGS84 坐标顺序", async () => {
-  const { placeSchema, mapLink } = await import("../shared/places");
+  const { placeSchema, mapLink, mapSearchLink, mapCopyText } = await import(
+    "../shared/places"
+  );
   const p = {
     id: "test",
     name: "测试地点",
@@ -122,8 +124,20 @@ test("地点坐标验证与导航保持 WGS84 坐标顺序", async () => {
     provider: "geoapify",
   };
   assert.equal(placeSchema.safeParse({ ...p, latitude: 91 }).success, false);
+  const dir = new URL(mapLink(placeSchema.parse(p)));
+  assert.equal(dir.hostname, "www.google.com");
+  assert.equal(dir.searchParams.get("destination"), "48.85,2.29");
   assert.equal(
-    new URL(mapLink(placeSchema.parse(p))).searchParams.get("daddr"),
-    "48.85,2.29",
+    new URL(mapSearchLink("Wharariki Beach")).searchParams.get("query"),
+    "Wharariki Beach",
+  );
+  assert.equal(
+    mapCopyText({
+      name: "Wharariki Beach",
+      address: "Puponga",
+      latitude: -40.5,
+      longitude: 172.68,
+    }),
+    "Wharariki Beach\nPuponga\n-40.5, 172.68",
   );
 });

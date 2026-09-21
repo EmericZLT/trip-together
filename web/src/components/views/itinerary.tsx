@@ -1,16 +1,16 @@
 "use client";
-import { mapLink } from "../../../../shared/places";
 import { useState } from "react";
 import {
   Plus,
-  ArrowUpRight,
   MapPin,
   Phone,
   Clock3,
   CalendarDays,
   ArrowRight,
+  ArrowUpRight,
   AlertCircle,
 } from "lucide-react";
+import { MapPlaceActions } from "../map-place-actions";
 import type { TripData, TripDocument, TripEvent } from "@/lib/models";
 import {
   localDate,
@@ -267,28 +267,21 @@ export function EventDetail({
             </span>
           </div>
         )}
-        <div className="detail-row">
-          <MapPin size={19} />
-          <span>
-            {event.place}
-            <small>{event.address}</small>
-          </span>
-        </div>
-        {(event.location || event.address) && (
-          <a
-            className="secondary-button w-full"
-            target="_blank"
-            rel="noreferrer"
-            href={
-              event.location
-                ? mapLink(event.location)
-                : `https://maps.apple.com/?q=${encodeURIComponent(event.address ?? "")}`
-            }
-          >
-            {event.location ? "打开地图导航" : "在地图中搜索"}
-            <ArrowUpRight size={16} />
-          </a>
+        {(event.place || event.address || event.location || event.to) && (
+          <div className="detail-row">
+            <MapPin size={19} />
+            <span>
+              {event.place || event.to}
+              <small>
+                {event.address ||
+                  (event.location
+                    ? `${event.location.latitude}, ${event.location.longitude}`
+                    : "")}
+              </small>
+            </span>
+          </div>
         )}
+        <MapPlaceActions event={event} />
         {event.phone && (
           <a className="detail-row text-action" href={`tel:${event.phone}`}>
             <Phone size={18} />

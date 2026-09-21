@@ -7,7 +7,7 @@ test("短弹窗自然高度、长表单只滚动内容、底部按钮关联原�
   const account = await new Client().register();
   const tripId = await createTrip(account);
   await page.goto("/");
-  await page.getByLabel("邮箱", { exact: true }).fill(account.email);
+  await page.getByLabel("用户名", { exact: true }).fill(account.email);
   await page.getByLabel("密码", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await page.getByRole("button", { name: "行程", exact: true }).click();
