@@ -23,7 +23,7 @@ export async function passwordHash(password: string, salt: string) {
         name: "PBKDF2",
         hash: "SHA-256",
         salt: encoder.encode(salt),
-        iterations: 100000,
+        iterations: 10,
       },
       key,
       256,
