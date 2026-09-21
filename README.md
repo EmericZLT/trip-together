@@ -34,7 +34,7 @@ npm run seed
 
 可选：复制 `scripts/seed-expenses.example.json` 为 `data/seed-expenses.json`。金额单位是分，例如 `1280000` 表示 12800.00 元。不确定的费用不要写进文件，登录后在账本里填更合适。
 
-重复运行会更新行程事项，不会覆盖已有账本（除非你在费用文件里新增）。若要重置初始密码，使用 `npm run seed -- --reset-passwords`。
+重复运行会更新成员姓名，不会覆盖已有行程事项或账本（除非你在费用文件里新增）。前端里改过、删过的活动会留在数据库里。若要按 `nz-itinerary.ts` 重建行程，使用 `npm run seed -- --reset-itinerary`。若要重置初始密码，使用 `npm run seed -- --reset-passwords`。
 
 Render 上线后可用一次性接口（需设置环境变量 `SEED_TOKEN`）：
 

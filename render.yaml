@@ -2,11 +2,15 @@ services:
   - type: web
     name: trip-together-backend
     runtime: node
-    plan: free
+    plan: starter
     region: oregon
     buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /health
+    disk:
+      name: trip-data
+      mountPath: /data
+      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: "22"
@@ -15,8 +19,10 @@ services:
       - key: SKIP_EMAIL_VERIFICATION
         value: "true"
       - key: DATA_DIR
-        value: ./data
+        value: /data
       - key: SESSION_SIGNING_KEY
+        generateValue: true
+      - key: SEED_TOKEN
         generateValue: true
       - key: ALLOWED_ORIGINS
         sync: false

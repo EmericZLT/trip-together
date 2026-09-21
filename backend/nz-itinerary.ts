@@ -105,15 +105,6 @@ export function itineraryEvents() {
       note: "海关、检疫与租车。约 3 小时，步行与接驳。",
     }),
     event({
-      title: "市区等候入住",
-      kind: "explore",
-      timezone: NZ,
-      start: iso("2026-09-25", "09:30", "nz"),
-      end: iso("2026-09-25", "14:30", "nz"),
-      place: "Auckland",
-      note: "民宿 15:00 后入住。上午倒时差，Mission Bay 一带等候即可。",
-    }),
-    event({
       title: "Mission Bay",
       kind: "explore",
       timezone: NZ,

@@ -22,8 +22,14 @@ async function main() {
     members,
     expenses,
     resetPasswords: process.argv.includes("--reset-passwords"),
+    resetItinerary: process.argv.includes("--reset-itinerary"),
   });
   console.log(JSON.stringify(result, null, 2));
+  if (result.itinerary === "kept") {
+    console.log(
+      "行程事项已保留（前端改过的活动不会被覆盖）。若要按 nz-itinerary.ts 重建，使用 npm run seed -- --reset-itinerary。",
+    );
+  }
   console.log(
     "不要把初始密码提交到 Git。成员登录后可在「我的」修改密码。已付机票或租车请用创建者账号打开账本预填。",
   );

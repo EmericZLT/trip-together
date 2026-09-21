@@ -87,7 +87,12 @@ async function upsertMember(env: Env, input: SeedMember, resetPassword: boolean)
 
 export async function seedNzTrip(
   env: Env,
-  input: { members: SeedMember[]; expenses?: SeedExpense[]; resetPasswords?: boolean },
+  input: {
+    members: SeedMember[];
+    expenses?: SeedExpense[];
+    resetPasswords?: boolean;
+    resetItinerary?: boolean;
+  },
 ) {
   const members = input.members ?? [];
   if (members.length < 2) throw new HttpError(400, "请至少提供两名成员");
@@ -140,31 +145,40 @@ export async function seedNzTrip(
       .bind(trip.id, member.id)
       .run();
   }
-  await env.DB.prepare("DELETE FROM events WHERE trip_id=?").bind(trip.id).run();
-  for (const item of itineraryEvents()) {
-    const eventId = crypto.randomUUID();
-    await env.DB.prepare(
-      "INSERT INTO events (id,trip_id,data,created_by) VALUES (?,?,?,?)",
-    )
-      .bind(
-        eventId,
-        trip.id,
-        JSON.stringify({ ...item, id: eventId }),
-        ownerId,
-      )
-      .run();
-  }
-  await env.DB.prepare("DELETE FROM packing WHERE trip_id=?").bind(trip.id).run();
-  await env.DB.prepare("DELETE FROM preparation_items WHERE trip_id=?")
+  const existingEvents = await env.DB.prepare(
+    "SELECT count(*) AS n FROM events WHERE trip_id=?",
+  )
     .bind(trip.id)
-    .run();
-  for (const [group_name, title, note] of packingList) {
-    const itemId = crypto.randomUUID();
-    await env.DB.prepare(
-      "INSERT INTO preparation_items (id,trip_id,group_name,title,note) VALUES (?,?,?,?,?)",
-    )
-      .bind(itemId, trip.id, group_name, title, note)
+    .first<{ n: number }>();
+  const replaceItinerary =
+    Boolean(input.resetItinerary) || !Number(existingEvents?.n);
+  if (replaceItinerary) {
+    await env.DB.prepare("DELETE FROM events WHERE trip_id=?").bind(trip.id).run();
+    for (const item of itineraryEvents()) {
+      const eventId = crypto.randomUUID();
+      await env.DB.prepare(
+        "INSERT INTO events (id,trip_id,data,created_by) VALUES (?,?,?,?)",
+      )
+        .bind(
+          eventId,
+          trip.id,
+          JSON.stringify({ ...item, id: eventId }),
+          ownerId,
+        )
+        .run();
+    }
+    await env.DB.prepare("DELETE FROM packing WHERE trip_id=?").bind(trip.id).run();
+    await env.DB.prepare("DELETE FROM preparation_items WHERE trip_id=?")
+      .bind(trip.id)
       .run();
+    for (const [group_name, title, note] of packingList) {
+      const itemId = crypto.randomUUID();
+      await env.DB.prepare(
+        "INSERT INTO preparation_items (id,trip_id,group_name,title,note) VALUES (?,?,?,?,?)",
+      )
+        .bind(itemId, trip.id, group_name, title, note)
+        .run();
+    }
   }
   const participantIds = ids.map((m) => m.id);
   for (const expense of input.expenses ?? []) {
@@ -191,6 +205,7 @@ export async function seedNzTrip(
   return {
     tripId: trip.id,
     title: tripMeta.title,
+    itinerary: replaceItinerary ? "seeded" : "kept",
     members: ids.map(({ email, name, owner }) => ({ email, name, owner })),
   };
 }
@@ -206,12 +221,14 @@ export async function seedFromRequest(request: Request, env: Env) {
         members?: SeedMember[];
         expenses?: SeedExpense[];
         resetPasswords?: boolean;
+        resetItinerary?: boolean;
       });
   return json(
     await seedNzTrip(env, {
       members: body.members ?? [],
       expenses: body.expenses,
       resetPasswords: body.resetPasswords,
+      resetItinerary: body.resetItinerary,
     }),
   );
 }
