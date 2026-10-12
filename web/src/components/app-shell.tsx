@@ -145,6 +145,7 @@ export function AppShell() {
                   onManage={manage}
                 />
               }
+              canReview={boot.canReviewRegistrations}
             />
           ) : (
             <main id="main-content">
@@ -162,6 +163,7 @@ export function AppShell() {
                     />
                   }
                   onDocument={setDoc}
+                  canReview={boot.canReviewRegistrations}
                 />
               ) : (
                 <EmptyWorkspace tab={tab} onManage={manage} />

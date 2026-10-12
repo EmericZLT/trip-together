@@ -44,5 +44,6 @@ declare global {
     OPENPANEL_CLIENT_ID: string;
     OPENPANEL_CLIENT_SECRET?: string;
     SEED_TOKEN: string;
+    REGISTRATION_APPROVER?: string;
   }
 }

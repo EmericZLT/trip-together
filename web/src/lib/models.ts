@@ -25,6 +25,7 @@ export type Bootstrap = {
   me: Profile;
   trips: Trip[];
   documents: TripDocument[];
+  canReviewRegistrations?: boolean;
 };
 export type Member = {
   id: string;

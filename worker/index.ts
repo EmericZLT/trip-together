@@ -19,6 +19,10 @@ import { updateProfile, changePassword } from "./accounts/profile";
 import { personalDocument } from "./storage/personal-documents";
 import { fileResponse } from "./files";
 import { seedFromRequest } from "../backend/seed.ts";
+import {
+  listRegistrations,
+  reviewRegistration,
+} from "./accounts/registrations";
 
 export async function handleApi(request: Request, env: Env): Promise<Response> {
   try {
@@ -39,6 +43,7 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
       return secure(
         json({
           emailVerificationRequired: verificationRequired(request, env),
+          registrationApproval: Boolean(env.REGISTRATION_APPROVER?.trim()),
         }),
       );
     if (method === "POST") {
@@ -47,8 +52,7 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
       if (path === "/api/migrate-account")
         return secure(await migrateAccount(request, env));
       if (path === "/api/login") return secure(await login(request, env));
-      if (path === "/api/register")
-        return secure(await register(request, env));
+      if (path === "/api/register") return secure(await register(request, env));
       if (path === "/api/recover") return secure(await recover(request, env));
     }
     const memberId = await identity(request, env);
@@ -66,7 +70,21 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
       r = await changePassword(request, env, memberId);
     else if (path === "/api/avatar" && ["PUT", "DELETE"].includes(method))
       r = await uploadAvatar(request, env, memberId);
-    else if (path === "/api/trips" && method === "POST")
+    else if (path === "/api/registrations" && method === "GET")
+      r = await listRegistrations(request, env, memberId);
+    else if (
+      method === "POST" &&
+      /^\/api\/registrations\/[^/]+\/(?:approve|reject)$/.test(path)
+    ) {
+      const [, , , id, action] = path.split("/");
+      r = await reviewRegistration(
+        request,
+        env,
+        memberId,
+        id,
+        action === "approve" ? "approve" : "reject",
+      );
+    } else if (path === "/api/trips" && method === "POST")
       r = await createTrip(request, env, memberId);
     else if (path === "/api/join" && method === "POST")
       r = await join(request, env, memberId);
@@ -76,12 +94,7 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
       /^\/api\/avatars\/[^/]+$/.test(path) &&
       ["GET", "HEAD"].includes(method)
     )
-      r = await avatarResponse(
-        request,
-        env,
-        path.split("/").at(-1)!,
-        memberId,
-      );
+      r = await avatarResponse(request, env, path.split("/").at(-1)!, memberId);
     else if (
       /^\/api\/files\/[^/]+$/.test(path) &&
       ["GET", "HEAD"].includes(method)

@@ -6,12 +6,14 @@ import { PersonalDocuments } from "../profile/personal-documents";
 import { ProfileEditor, PasswordEditor } from "../account/profile-editor";
 import { Avatar } from "../avatar";
 import { SectionTitle } from "../ui";
+import { RegistrationReview } from "../profile/registration-review";
 export function Profile({
   data,
   onRefresh,
   onLogout,
   tripControls,
   onDocument,
+  canReview = false,
 }: {
   data: Pick<TripData, "me" | "members" | "documents"> & {
     trip?: TripData["trip"];
@@ -20,6 +22,7 @@ export function Profile({
   onLogout: () => Promise<void>;
   tripControls: ReactNode;
   onDocument: (doc: TripDocument) => void;
+  canReview?: boolean;
 }) {
   const [editing, setEditing] = useState(false),
     [passwordOpen, setPasswordOpen] = useState(false);
@@ -59,6 +62,7 @@ export function Profile({
         </button>
       </div>
       {tripControls}
+      {canReview && <RegistrationReview />}
       {editing && (
         <ProfileEditor
           profile={data.me}

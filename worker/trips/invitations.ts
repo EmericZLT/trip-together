@@ -3,13 +3,14 @@ import { body, HttpError, json } from "../http";
 import { sha } from "../accounts/password";
 import { rateLimit } from "../security/rate-limit";
 import { requireOwner, type Trip } from "./access";
-const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const span = Math.floor(256 / alphabet.length) * alphabet.length;
 export function invitationCode() {
   let code = "";
   while (code.length < 6) {
     const bytes = crypto.getRandomValues(new Uint8Array(12));
     for (const byte of bytes) {
-      if (byte < 240) code += alphabet[byte % 24];
+      if (byte < span) code += alphabet[byte % alphabet.length];
       if (code.length === 6) break;
     }
   }
@@ -61,8 +62,9 @@ export async function invite(
   throw new HttpError(503, "暂时无法生成邀请口令，请重试");
 }
 export async function join(request: Request, env: Env, memberId: string) {
-  await rateLimit(request, env, "join", 20);
-  await rateLimit(request, env, "join-member", 20, memberId);
+  await rateLimit(request, env, "join", 5);
+  await rateLimit(request, env, "join-member", 8, memberId);
+  await rateLimit(request, env, "join-global", 30, "global");
   const { token } = await body(
     request,
     z.object({
@@ -71,8 +73,8 @@ export async function join(request: Request, env: Env, memberId: string) {
         .trim()
         .transform((v) => (v.length === 6 ? v.toUpperCase() : v.toLowerCase()))
         .refine(
-          (v) => /^[A-HJ-NP-Z]{6}$/.test(v) || /^[a-f0-9]{64}$/.test(v),
-          "请输入完整的 6 位字母邀请口令",
+          (v) => /^[A-HJ-NP-Z2-9]{6}$/.test(v) || /^[a-f0-9]{64}$/.test(v),
+          "请输入完整的 6 位邀请口令",
         ),
     }),
   );

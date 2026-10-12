@@ -1,10 +1,17 @@
 import { z } from "zod";
 import { body, HttpError, json } from "./http";
 import { signSession, verifiedSession } from "./security/session";
-import { sha, randomToken, passwordHash, equal, MIN_PASSWORD_LENGTH } from "./accounts/password";
+import {
+  sha,
+  randomToken,
+  passwordHash,
+  equal,
+  MIN_PASSWORD_LENGTH,
+} from "./accounts/password";
 import { rateLimit } from "./security/rate-limit";
 export { rateLimit } from "./security/rate-limit";
 import { accountName, consumeCode } from "./security/email";
+import { approverName } from "./accounts/registrations";
 export { sha } from "./accounts/password";
 const credentials = z.object({
   email: accountName,
@@ -52,9 +59,12 @@ async function session(
   });
 }
 export async function register(request: Request, env: Env) {
-  await rateLimit(request, env, "register");
+  await rateLimit(request, env, "register", 5);
+  await rateLimit(request, env, "register-global", 20, "global");
   const input = await body(request, credentials);
+  await rateLimit(request, env, "register-name", 3, input.email);
   await consumeCode(request, env, input.email, "register", input.code);
+  if (approverName(env)) return submitRegistration(env, input);
   const id = crypto.randomUUID(),
     salt = randomToken();
   const result = await env.DB.prepare(
@@ -73,6 +83,29 @@ export async function register(request: Request, env: Env) {
     throw new HttpError(409, "用户名已经注册，请登录或重置密码");
   return session(request, env, id);
 }
+async function submitRegistration(
+  env: Env,
+  input: { email: string; password: string },
+) {
+  const member = await env.DB.prepare("SELECT 1 FROM members WHERE email=?")
+    .bind(input.email)
+    .first();
+  if (member) throw new HttpError(409, "用户名已经注册，请登录或重置密码");
+  const pending = await env.DB.prepare(
+    "SELECT 1 FROM registration_requests WHERE email=?",
+  )
+    .bind(input.email)
+    .first();
+  if (pending) throw new HttpError(409, "已提交注册，请等待审批");
+  const id = crypto.randomUUID(),
+    salt = randomToken();
+  await env.DB.prepare(
+    "INSERT INTO registration_requests (id,email,password_hash,salt) VALUES (?,?,?,?)",
+  )
+    .bind(id, input.email, await passwordHash(input.password, salt), salt)
+    .run();
+  return json({ pending: true });
+}
 export async function login(request: Request, env: Env) {
   await rateLimit(request, env, "login");
   const input = await body(
@@ -84,10 +117,19 @@ export async function login(request: Request, env: Env) {
   )
     .bind(input.email)
     .first<{ id: string; password_hash: string; salt: string }>();
+  const pending = member
+    ? null
+    : await env.DB.prepare(
+        "SELECT password_hash,salt FROM registration_requests WHERE email=?",
+      )
+        .bind(input.email)
+        .first<{ password_hash: string; salt: string }>();
   const hash = await passwordHash(
     input.password,
-    member?.salt ?? "invalid-account",
+    member?.salt ?? pending?.salt ?? "invalid-account",
   );
+  if (pending && equal(hash, pending.password_hash))
+    throw new HttpError(403, "账号正在等待审批");
   if (!member || !equal(hash, member.password_hash))
     throw new HttpError(401, "用户名或密码不正确");
   return session(request, env, member.id);

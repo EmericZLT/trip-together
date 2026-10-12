@@ -25,13 +25,18 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [required, setRequired] = useState(true),
+    [approval, setApproval] = useState(false),
     [loaded, setLoaded] = useState(false),
     [retryAt, setRetryAt] = useState(0),
     [now, setNow] = useState(Date.now());
   useEffect(() => {
-    api<{ emailVerificationRequired: boolean }>("/auth-config")
+    api<{
+      emailVerificationRequired: boolean;
+      registrationApproval?: boolean;
+    }>("/auth-config")
       .then((r) => {
         setRequired(r.emailVerificationRequired);
+        setApproval(Boolean(r.registrationApproval));
         setLoaded(true);
       })
       .catch((e) => setError(e.message));
@@ -73,15 +78,25 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
     setError("");
     setNotice("");
     try {
-      await api(`/${mode === "migrate" ? "migrate-account" : mode}`, {
-        method: "POST",
-        body: JSON.stringify({
-          email,
-          password,
-          ...(mode !== "login" ? { code } : {}),
-          legacyUsername,
-        }),
-      });
+      const result = await api<{ pending?: boolean }>(
+        `/${mode === "migrate" ? "migrate-account" : mode}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            password,
+            ...(mode !== "login" ? { code } : {}),
+            legacyUsername,
+          }),
+        },
+      );
+      if (result.pending) {
+        setMode("login");
+        setPassword("");
+        setCode("");
+        setNotice("申请已提交。审批通过后，使用这个用户名和密码登录。");
+        return;
+      }
       if (mode === "recover") {
         switchMode("login");
         setNotice("密码已经更新，请重新登录。");
@@ -100,7 +115,9 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
         <p className="muted">
           {mode === "migrate"
             ? "使用原账号和密码绑定邮箱，保留已有行程与资料。"
-            : "创建自己的行程，与同行成员共享安排和账本。"}
+            : mode === "register" && approval
+              ? "提交后需要审批，通过后即可登录。"
+              : "创建自己的行程，与同行成员共享安排和账本。"}
         </p>
         <form className="editor-form" onSubmit={submit}>
           {mode === "migrate" && (
@@ -210,7 +227,9 @@ export function Login({ onLogin }: { onLogin: () => Promise<void> }) {
                 : mode === "login"
                   ? "登录"
                   : mode === "register"
-                    ? "注册"
+                    ? approval
+                      ? "提交申请"
+                      : "注册"
                     : mode === "recover"
                       ? "重置密码"
                       : "绑定邮箱并登录"}

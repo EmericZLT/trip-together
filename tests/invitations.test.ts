@@ -14,7 +14,7 @@ test("六位邀请口令唯一、可重新读取、大小写加入、轮换撤�
     const id = await createTrip(owner),
       path = `/trips/${id}/invites`;
     const result = await owner.request(path, "POST", {});
-    assert.match(result.token, /^[A-HJ-NP-Z]{6}$/);
+    assert.match(result.token, /^[A-HJ-NP-Z2-9]{6}$/);
     assert.equal(codes.has(result.token), false);
     codes.add(result.token);
     assert.equal((await owner.request(path)).token, result.token);

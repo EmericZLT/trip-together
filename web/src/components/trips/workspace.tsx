@@ -23,6 +23,7 @@ export function TripWorkspace({
   onNavigate,
   onAccountRefresh,
   tripControls,
+  canReview = false,
 }: {
   onTripList: () => void;
   onSessionExpired: () => void;
@@ -30,6 +31,7 @@ export function TripWorkspace({
   onNavigate: (tab: string) => void;
   onAccountRefresh: () => Promise<void>;
   tripControls: ReactNode;
+  canReview?: boolean;
 }) {
   const [data, setData] = useState<TripData | null>(null),
     [loading, setLoading] = useState(true),
@@ -201,6 +203,7 @@ export function TripWorkspace({
             tripControls={tripControls}
             onLogout={logout}
             onDocument={setDoc}
+            canReview={canReview}
           />
         )}
       </main>

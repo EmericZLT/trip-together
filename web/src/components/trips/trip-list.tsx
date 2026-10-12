@@ -179,7 +179,7 @@ export function TripList({
                 required
                 value={token}
                 autoComplete="off"
-                placeholder="输入 6 位字母口令"
+                placeholder="输入 6 位口令"
                 onChange={(e) => {
                   setToken(e.target.value.replace(/\s/g, "").toUpperCase());
                   setError("");

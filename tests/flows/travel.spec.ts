@@ -139,7 +139,9 @@ test("从注册到行程、文件、账本、证件和重新登录", async ({
   await page.getByRole("button", { name: /我的行程.*创建/ }).click();
   await page.getByRole("button", { name: "管理行程：周末城市旅行" }).click();
   await page.getByRole("button", { name: "生成同行邀请" }).click();
-  await expect(page.getByLabel("同行邀请口令")).toHaveValue(/^[A-HJ-NP-Z]{6}$/);
+  await expect(page.getByLabel("同行邀请口令")).toHaveValue(
+    /^[A-HJ-NP-Z2-9]{6}$/,
+  );
   await page.getByRole("button", { name: "返回我的行程", exact: true }).click();
   await page.getByRole("button", { name: "返回", exact: true }).click();
   await page.getByRole("button", { name: "现在", exact: true }).click();

@@ -4,6 +4,7 @@ import { tripSchema } from "../../shared/validation";
 import { profile } from "../accounts/profile";
 import { rateLimit } from "../auth";
 import { requireOwner, type Trip } from "./access";
+import { isApprover } from "../accounts/registrations";
 export async function bootstrap(env: Env, id: string) {
   const [me, trips, documents] = await Promise.all([
     profile(env, id),
@@ -25,6 +26,7 @@ export async function bootstrap(env: Env, id: string) {
       destinations: JSON.parse(String(t.destinations ?? "[]")),
     })),
     documents: documents.results,
+    canReviewRegistrations: await isApprover(env, id),
   });
 }
 export async function createTrip(request: Request, env: Env, memberId: string) {
